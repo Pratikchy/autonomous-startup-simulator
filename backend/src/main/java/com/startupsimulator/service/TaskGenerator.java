@@ -6,12 +6,13 @@ import com.startupsimulator.model.ExecutionTask;
 import com.startupsimulator.model.enums.AgentType;
 import com.startupsimulator.model.enums.TaskPriority;
 import com.startupsimulator.repository.ExecutionTaskRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.startupsimulator.trace.ExecutionTraceService;
 
 /**
  * Generates an executable task graph (DAG) from any arbitrary persisted Startup Blueprint.
@@ -19,10 +20,30 @@ import java.util.List;
  * marketing strategy, and financial budget allocations.
  */
 @Service
-@RequiredArgsConstructor
 public class TaskGenerator {
 
     private final ExecutionTaskRepository taskRepository;
+    private final ExecutionTraceService traceService;
+
+    public TaskGenerator(ExecutionTaskRepository taskRepository) {
+        this(taskRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public TaskGenerator(ExecutionTaskRepository taskRepository, ExecutionTraceService traceService) {
+        this.taskRepository = taskRepository;
+        this.traceService = traceService;
+    }
+
+    private ExecutionTask saveTask(ExecutionTask task) {
+        ExecutionTask saved = taskRepository.save(task);
+        if (traceService != null) {
+            traceService.recordTaskStateChange(saved.getStartupId(), null,
+                    saved.getDepartment() != null ? saved.getDepartment().name() : null,
+                    saved.getId(), saved.getTitle(), null, saved.getStatus(), "Initial task creation");
+        }
+        return saved;
+    }
 
     @Transactional
     public List<ExecutionTask> generateTasks(Long startupId, BlueprintDto blueprint) {
@@ -41,7 +62,7 @@ public class TaskGenerator {
                 TaskPriority.HIGH,
                 3
         );
-        ceoTask1 = taskRepository.save(ceoTask1);
+        ceoTask1 = saveTask(ceoTask1);
         generated.add(ceoTask1);
 
         // 2. DEVELOPMENT TASKS
@@ -58,7 +79,7 @@ public class TaskGenerator {
                 4
         );
         devTask1.setDependencies(List.of(ceoTask1.getId()));
-        devTask1 = taskRepository.save(devTask1);
+        devTask1 = saveTask(devTask1);
         generated.add(devTask1);
 
         ExecutionTask devTask2 = new ExecutionTask(
@@ -74,7 +95,7 @@ public class TaskGenerator {
                 6
         );
         devTask2.setDependencies(List.of(devTask1.getId()));
-        devTask2 = taskRepository.save(devTask2);
+        devTask2 = saveTask(devTask2);
         generated.add(devTask2);
 
         // Dynamic MVP Feature Implementation Tasks
@@ -96,7 +117,7 @@ public class TaskGenerator {
                         Math.max(4, Math.min(feature.effort() * 2, 8))
                 );
                 featureTask.setDependencies(List.of(lastDevId));
-                featureTask = taskRepository.save(featureTask);
+                featureTask = saveTask(featureTask);
                 generated.add(featureTask);
                 lastDevId = featureTask.getId();
             }
@@ -111,7 +132,7 @@ public class TaskGenerator {
                     7
             );
             defaultMvpTask.setDependencies(List.of(lastDevId));
-            defaultMvpTask = taskRepository.save(defaultMvpTask);
+            defaultMvpTask = saveTask(defaultMvpTask);
             generated.add(defaultMvpTask);
             lastDevId = defaultMvpTask.getId();
         }
@@ -126,7 +147,7 @@ public class TaskGenerator {
                 4
         );
         devTaskQa.setDependencies(List.of(lastDevId));
-        devTaskQa = taskRepository.save(devTaskQa);
+        devTaskQa = saveTask(devTaskQa);
         generated.add(devTaskQa);
 
         // 3. MARKETING TASKS
@@ -143,7 +164,7 @@ public class TaskGenerator {
                 4
         );
         mktTask1.setDependencies(List.of(ceoTask1.getId()));
-        mktTask1 = taskRepository.save(mktTask1);
+        mktTask1 = saveTask(mktTask1);
         generated.add(mktTask1);
 
         ExecutionTask mktTask2 = new ExecutionTask(
@@ -156,7 +177,7 @@ public class TaskGenerator {
                 5
         );
         mktTask2.setDependencies(List.of(mktTask1.getId()));
-        mktTask2 = taskRepository.save(mktTask2);
+        mktTask2 = saveTask(mktTask2);
         generated.add(mktTask2);
 
         ExecutionTask mktTask3 = new ExecutionTask(
@@ -172,7 +193,7 @@ public class TaskGenerator {
                 7
         );
         mktTask3.setDependencies(List.of(mktTask2.getId(), devTaskQa.getId()));
-        mktTask3 = taskRepository.save(mktTask3);
+        mktTask3 = saveTask(mktTask3);
         generated.add(mktTask3);
 
         // 4. FINANCE TASKS
@@ -186,7 +207,7 @@ public class TaskGenerator {
                 3
         );
         finTask1.setDependencies(List.of(ceoTask1.getId()));
-        finTask1 = taskRepository.save(finTask1);
+        finTask1 = saveTask(finTask1);
         generated.add(finTask1);
 
         ExecutionTask finTask2 = new ExecutionTask(
@@ -202,7 +223,7 @@ public class TaskGenerator {
                 5
         );
         finTask2.setDependencies(List.of(finTask1.getId(), mktTask1.getId()));
-        finTask2 = taskRepository.save(finTask2);
+        finTask2 = saveTask(finTask2);
         generated.add(finTask2);
 
         ExecutionTask finTask3 = new ExecutionTask(
@@ -215,7 +236,7 @@ public class TaskGenerator {
                 6
         );
         finTask3.setDependencies(List.of(finTask2.getId(), mktTask3.getId()));
-        finTask3 = taskRepository.save(finTask3);
+        finTask3 = saveTask(finTask3);
         generated.add(finTask3);
 
         // Final CEO Review Task
@@ -229,7 +250,7 @@ public class TaskGenerator {
                 4
         );
         ceoTaskFinal.setDependencies(List.of(mktTask3.getId(), finTask3.getId()));
-        ceoTaskFinal = taskRepository.save(ceoTaskFinal);
+        ceoTaskFinal = saveTask(ceoTaskFinal);
         generated.add(ceoTaskFinal);
 
         return generated;

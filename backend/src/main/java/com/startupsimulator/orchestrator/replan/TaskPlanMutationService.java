@@ -7,7 +7,7 @@ import com.startupsimulator.model.enums.TaskPriority;
 import com.startupsimulator.model.enums.TaskStatus;
 import com.startupsimulator.repository.ExecutionTaskRepository;
 import com.startupsimulator.service.EventService;
-import lombok.RequiredArgsConstructor;
+import com.startupsimulator.trace.ExecutionTraceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +20,22 @@ import java.util.*;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TaskPlanMutationService {
 
     private final ExecutionTaskRepository taskRepository;
     private final EventService eventService;
+    private final ExecutionTraceService traceService;
+
+    public TaskPlanMutationService(ExecutionTaskRepository taskRepository, EventService eventService) {
+        this(taskRepository, eventService, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public TaskPlanMutationService(ExecutionTaskRepository taskRepository, EventService eventService, ExecutionTraceService traceService) {
+        this.taskRepository = taskRepository;
+        this.eventService = eventService;
+        this.traceService = traceService;
+    }
 
     @Transactional
     public List<ExecutionTask> applyReplan(Long startupId, ReplanProposal proposal) {
@@ -78,6 +89,10 @@ public class TaskPlanMutationService {
                     eventService.record(startupId, EventType.TASK_CREATED,
                             "Replanning created task #" + newTask.getId() + ": " + newTask.getTitle(),
                             Map.of("taskId", newTask.getId(), "department", dept.name(), "title", newTask.getTitle()));
+
+                    if (traceService != null) {
+                        traceService.recordTaskStateChange(startupId, null, dept.name(), newTask.getId(), newTask.getTitle(), null, TaskStatus.PENDING, "Created task via replan");
+                    }
                 }
                 case MODIFY_TASK -> {
                     taskRepository.findById(change.targetTaskId()).ifPresent(t -> {
@@ -98,6 +113,7 @@ public class TaskPlanMutationService {
                 }
                 case DEFER_TASK -> {
                     taskRepository.findById(change.targetTaskId()).ifPresent(t -> {
+                        TaskStatus oldStatus = t.getStatus();
                         t.setStatus(TaskStatus.DEFERRED);
                         if (change.reason() != null && !change.reason().isBlank()) {
                             String existing = t.getBlockerReason();
@@ -111,10 +127,15 @@ public class TaskPlanMutationService {
                         eventService.record(startupId, EventType.TASK_DEFERRED,
                                 "Replanning deferred task #" + t.getId() + ": " + t.getTitle(),
                                 Map.of("taskId", t.getId(), "status", TaskStatus.DEFERRED.name()));
+
+                        if (traceService != null) {
+                            traceService.recordTaskStateChange(startupId, null, t.getDepartment() != null ? t.getDepartment().name() : null, t.getId(), t.getTitle(), oldStatus, TaskStatus.DEFERRED, change.reason());
+                        }
                     });
                 }
                 case CANCEL_TASK -> {
                     taskRepository.findById(change.targetTaskId()).ifPresent(t -> {
+                        TaskStatus oldStatus = t.getStatus();
                         t.setStatus(TaskStatus.CANCELLED);
                         if (change.reason() != null && !change.reason().isBlank()) {
                             String existing = t.getBlockerReason();
@@ -128,6 +149,10 @@ public class TaskPlanMutationService {
                         eventService.record(startupId, EventType.TASK_CANCELLED,
                                 "Replanning cancelled task #" + t.getId() + ": " + t.getTitle(),
                                 Map.of("taskId", t.getId(), "status", TaskStatus.CANCELLED.name()));
+
+                        if (traceService != null) {
+                            traceService.recordTaskStateChange(startupId, null, t.getDepartment() != null ? t.getDepartment().name() : null, t.getId(), t.getTitle(), oldStatus, TaskStatus.CANCELLED, change.reason());
+                        }
                     });
                 }
                 case CHANGE_OWNER -> {

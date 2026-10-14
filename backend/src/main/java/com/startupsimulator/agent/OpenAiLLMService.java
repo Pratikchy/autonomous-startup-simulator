@@ -55,7 +55,9 @@ public class OpenAiLLMService implements LLMService {
                 ? props.getResilience().toRetryPolicy()
                 : new RetryPolicy();
         LlmProperties.OpenAi cfg = props.getOpenai();
+        int timeoutSeconds = props != null ? props.getRequestTimeoutSeconds() : 0;
         this.restClient = RestClient.builder()
+                .requestFactory(LlmHttpClients.timedRequestFactory(timeoutSeconds))
                 .baseUrl(cfg.getBaseUrl())
                 .defaultHeader("Authorization", "Bearer " + safeKey(cfg.getApiKey()))
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
@@ -63,6 +65,19 @@ public class OpenAiLLMService implements LLMService {
         log.info("OpenAiLLMService initialised (model={}, baseUrl={}, apiKeyPresent={}, maxAttempts={})",
                 cfg.getModel(), cfg.getBaseUrl(), cfg.getApiKey() != null && !cfg.getApiKey().isBlank(),
                 retryPolicy.getMaxAttempts());
+    }
+
+    /**
+     * Package-private constructor for unit testing with a pre-configured RestClient (e.g. backed by MockRestServiceServer).
+     */
+    OpenAiLLMService(LlmProperties props, ObjectMapper objectMapper, RestClient restClient, RetryExecutor retryExecutor) {
+        this.props = props;
+        this.objectMapper = objectMapper;
+        this.restClient = restClient;
+        this.retryExecutor = retryExecutor != null ? retryExecutor : new RetryExecutor();
+        this.retryPolicy = props != null && props.getResilience() != null
+                ? props.getResilience().toRetryPolicy()
+                : new RetryPolicy();
     }
 
     @Override
@@ -117,9 +132,6 @@ public class OpenAiLLMService implements LLMService {
             String content = extractContent(raw);
             log.info("LLM call ok (provider=openai, model={}, latencyMs={}, chars={})",
                     props.getOpenai().getModel(), latency, content == null ? 0 : content.length());
-            if (content == null || content.isBlank()) {
-                throw new CeoAnalysisException("OpenAI returned an empty completion.");
-            }
             return content;
         } catch (CeoAnalysisException e) {
             throw e;
@@ -135,14 +147,93 @@ public class OpenAiLLMService implements LLMService {
     private String extractContent(String raw) {
         try {
             JsonNode root = objectMapper.readTree(raw);
-            JsonNode choices = root.path("choices");
-            if (choices.isArray() && choices.size() > 0) {
-                return choices.get(0).path("message").path("content").asText(null);
+
+            // Detect OpenRouter error envelope returned at HTTP 200
+            if (root.has("error")) {
+                JsonNode errorNode = root.get("error");
+                String message = errorNode.path("message").asText(null);
+                if (message == null || message.isBlank()) {
+                    message = errorNode.path("error").isTextual()
+                            ? errorNode.get("error").asText()
+                            : "OpenRouter returned an error envelope";
+                }
+                String code = errorNode.path("code").asText(null);
+                String detail = code != null ? " (code=" + code + ")" : "";
+                throw new CeoAnalysisException("OpenRouter error" + detail + ": " + message);
             }
-            return null;
+
+            JsonNode choices = root.path("choices");
+            if (!choices.isArray() || choices.isEmpty()) {
+                String model = root.path("model").asText(null);
+                throw new CeoAnalysisException("OpenAI response has no choices"
+                        + (model != null ? " (model=" + model + ")" : ""));
+            }
+
+            JsonNode firstChoice = choices.get(0);
+            JsonNode messageNode = firstChoice.path("message");
+
+            // Surface finish_reason for diagnostics — never guess what went wrong
+            String finishReason = firstChoice.path("finish_reason").asText(null);
+
+            JsonNode contentNode = messageNode.path("content");
+
+            // Handle array-based content (OpenRouter free-tier models)
+            if (contentNode.isArray()) {
+                StringBuilder sb = new StringBuilder();
+                for (JsonNode block : contentNode) {
+                    if ("text".equals(block.path("type").asText(null))) {
+                        String text = block.path("text").asText(null);
+                        if (text != null && !text.isBlank()) {
+                            sb.append(text);
+                        }
+                    }
+                }
+                if (sb.isEmpty()) {
+                    throw emptyCompletion("content array", finishReason);
+                }
+                return sb.toString();
+            }
+
+            // Plain-text content
+            String text = contentNode.asText(null);
+
+            if (text == null || text.isBlank()) {
+                throw emptyCompletion("null/blank content", finishReason);
+            }
+
+            // Strip markdown fences if the content is JSON wrapped in ```json ... ```
+            String trimmed = text.trim();
+            if ((trimmed.startsWith("```json") || trimmed.startsWith("```")) && trimmed.endsWith("```")) {
+                int fenceEnd = trimmed.indexOf('\n');
+                if (fenceEnd > 0) {
+                    String inner = trimmed.substring(fenceEnd + 1, trimmed.length() - 3).trim();
+                    // Verify it looks like JSON before returning it
+                    if (inner.startsWith("{")) {
+                        return inner;
+                    }
+                }
+            }
+
+            return text;
+        } catch (CeoAnalysisException e) {
+            throw e;
         } catch (Exception e) {
             throw new CeoAnalysisException("Malformed OpenAI response envelope.", e);
         }
+    }
+
+    private static CeoAnalysisException emptyCompletion(String reason, String finishReason) {
+        String msg = "OpenAI returned an empty completion (" + reason + ")";
+        if (finishReason != null && !finishReason.isBlank()) {
+            msg += "; finish_reason=" + finishReason;
+            // Distinguish truncation from refusals / safety filters for operator visibility
+            if ("length".equals(finishReason)) {
+                msg += " (response truncated — max tokens reached or context full)";
+            } else if ("content_filter".equals(finishReason) || "safety".equals(finishReason)) {
+                msg += " (content filtered or refused)";
+            }
+        }
+        return new CeoAnalysisException(msg);
     }
 
     private static String safeKey(String key) {

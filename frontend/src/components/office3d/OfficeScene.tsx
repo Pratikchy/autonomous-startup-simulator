@@ -247,7 +247,6 @@ function OfficeSceneComponent({
       : null;
   const activeSpeaker = lastMessage ? lastMessage.agentLabel : null;
   const currentRound = lastMessage ? lastMessage.debateRound : null;
-  const speechText = lastMessage ? lastMessage.content : null;
 
   // Active department derived from agent working state / active execution task / debate
   const activeAgent = useMemo<AgentType | "BOARDROOM" | null>(() => {
@@ -389,21 +388,21 @@ function OfficeSceneComponent({
           Key directional sun (1024 shadow map) + warm interior ambient
           ═══════════════════════════════════════════════════════════ */}
 
-      {/* Warm ambient base fill */}
-      <ambientLight intensity={0.65} color="#fff8f0" />
+      {/* Warm ambient base fill — neutralized, no amber cast */}
+      <ambientLight intensity={0.72} color="#f6f0e8" />
 
-      {/* Hemisphere sky/ground bounce */}
+      {/* Hemisphere sky/ground bounce — muted sage/charcoal */}
       <hemisphereLight
-        color="#f0ece4"
-        groundColor="#8b7355"
-        intensity={0.45}
+        color="#eae6de"
+        groundColor="#4a6355"
+        intensity={0.32}
       />
 
-      {/* Key directional sun (1024x1024 shadow map for 60 FPS) */}
+      {/* Key directional sun — soft, very slight shadow falloff */}
       <directionalLight
         position={[16, 22, 14]}
-        intensity={1.5}
-        color="#fff5e6"
+        intensity={1.15}
+        color="#fff9ef"
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
@@ -413,19 +412,19 @@ function OfficeSceneComponent({
         shadow-camera-right={14}
         shadow-camera-top={14}
         shadow-camera-bottom={-14}
-        shadow-bias={-0.0005}
+        shadow-bias={-0.0007}
       />
 
-      {/* Cool fill light from opposite side */}
-      <directionalLight position={[-12, 14, -10]} intensity={0.45} color="#dce4f0" />
+      {/* Cool architectural fill from opposite wall */}
+      <directionalLight position={[-12, 14, -10]} intensity={0.22} color="#e8ecf2" />
 
-      {/* Soft warm rim from behind */}
-      <directionalLight position={[0, 10, -16]} intensity={0.3} color="#e8dcc8" />
+      {/* Warm interior fill — reduced */}
+      <directionalLight position={[0, 10, -16]} intensity={0.16} color="#efe8dc" />
 
-      {/* Overhead fill point lights */}
-      <pointLight position={[0, 5, 0]} color="#fff8f0" intensity={1.2} distance={18} />
-      <pointLight position={[-5, 4, -3]} color="#ffe8d0" intensity={0.6} distance={10} />
-      <pointLight position={[5, 4, 3]} color="#ffe8d0" intensity={0.6} distance={10} />
+      {/* Overhead fill point lights — dimmer, warmer */}
+      <pointLight position={[0, 5, 0]} color="#fff6ea" intensity={0.55} distance={18} />
+      <pointLight position={[-5, 4, -3]} color="#f2eadd" intensity={0.22} distance={10} />
+      <pointLight position={[5, 4, 3]} color="#f2eadd" intensity={0.22} distance={10} />
 
       {/* ═══════════════════════════════════════════════════════════
           2. ENVIRONMENT BACKDROP
@@ -443,25 +442,25 @@ function OfficeSceneComponent({
         <meshStandardMaterial color="#5c4033" roughness={0.5} metalness={0.1} />
       </mesh>
 
-      {/* Main warm oak wood floor */}
+      {/* Main warm oak wood floor — walnut, matte/satin */}
       <mesh position={[0, 0.005, 0]} receiveShadow>
         <boxGeometry args={[16.4, 0.01, 13.4]} />
-        <meshStandardMaterial color="#caa078" roughness={0.48} metalness={0.02} />
+        <meshStandardMaterial color="#7e5a3a" roughness={0.58} metalness={0.06} />
       </mesh>
 
-      {/* Wood plank accent lines */}
+      {/* Wood plank accent lines — subtle walnut grain */}
       {[-6.4, -4.8, -3.2, -1.6, 0, 1.6, 3.2, 4.8, 6.4].map((x) => (
         <mesh key={x} position={[x, 0.012, 0]}>
           <boxGeometry args={[0.015, 0.002, 13.2]} />
-          <meshStandardMaterial color="#a07850" roughness={0.6} />
+          <meshStandardMaterial color="#5a3f27" roughness={0.72} />
         </mesh>
       ))}
 
-      {/* Cross-plank accents */}
+      {/* Cross-plank accents — very restrained */}
       {[-5.2, -2.6, 0, 2.6, 5.2].map((z) => (
         <mesh key={z} position={[0, 0.013, z]}>
           <boxGeometry args={[16.2, 0.001, 0.01]} />
-          <meshStandardMaterial color="#b08860" roughness={0.7} />
+          <meshStandardMaterial color="#6b4d33" roughness={0.78} />
         </mesh>
       ))}
 
@@ -475,26 +474,26 @@ function OfficeSceneComponent({
         <meshStandardMaterial color="#1e293b" roughness={0.5} />
       </mesh>
 
-      {/* ─── Department carpet zone accents ─── */}
+      {/* ─── Department carpet zone accents — muted sage/charcoal, restrained ─── */}
       <mesh position={[0, 0.014, -4.2]} receiveShadow>
         <boxGeometry args={[4.6, 0.004, 3.0]} />
-        <meshStandardMaterial color="#b8946e" roughness={0.78} />
+        <meshStandardMaterial color="#9fb1a3" roughness={0.86} />
       </mesh>
       <mesh position={[0, 0.014, 0]} receiveShadow>
         <boxGeometry args={[5.2, 0.004, 3.4]} />
-        <meshStandardMaterial color="#8b7b6b" roughness={0.82} />
+        <meshStandardMaterial color="#556468" roughness={0.9} />
       </mesh>
       <mesh position={[5.2, 0.014, 0]} receiveShadow>
         <boxGeometry args={[4.0, 0.004, 3.4]} />
-        <meshStandardMaterial color="#7b8898" roughness={0.8} />
+        <meshStandardMaterial color="#5e6a76" roughness={0.88} />
       </mesh>
       <mesh position={[-5.2, 0.014, 0]} receiveShadow>
         <boxGeometry args={[4.0, 0.004, 3.4]} />
-        <meshStandardMaterial color="#987b88" roughness={0.8} />
+        <meshStandardMaterial color="#6b6a7a" roughness={0.88} />
       </mesh>
       <mesh position={[0, 0.014, 4.2]} receiveShadow>
         <boxGeometry args={[4.6, 0.004, 3.0]} />
-        <meshStandardMaterial color="#7b9888" roughness={0.8} />
+        <meshStandardMaterial color="#7a8c82" roughness={0.88} />
       </mesh>
 
       {/* ═══════════════════════════════════════════════════════════
@@ -772,7 +771,6 @@ function OfficeSceneComponent({
             activity={getEmployeeActivity(emp.department)}
             inBoardroom={inDebate}
             isCurrentSpeaker={isSpeaker}
-            speechText={isSpeaker ? speechText : null}
             onSelectDepartment={(d) => onSelectDepartment(d as AgentType)}
           />
         );

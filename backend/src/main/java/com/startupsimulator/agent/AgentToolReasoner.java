@@ -7,6 +7,7 @@ import com.startupsimulator.tool.ToolRegistry;
 import com.startupsimulator.tool.ToolRequest;
 import com.startupsimulator.tool.ToolResult;
 import com.startupsimulator.tool.ToolSchema;
+import com.startupsimulator.trace.ExecutionTraceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -50,10 +51,17 @@ public class AgentToolReasoner {
 
     private final ToolRegistry registry;
     private final ToolExecutionService executionService;
+    private final ExecutionTraceService traceService;
 
     public AgentToolReasoner(ToolRegistry registry, ToolExecutionService executionService) {
+        this(registry, executionService, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AgentToolReasoner(ToolRegistry registry, ToolExecutionService executionService, ExecutionTraceService traceService) {
         this.registry = registry;
         this.executionService = executionService;
+        this.traceService = traceService;
     }
 
     /**
@@ -106,6 +114,14 @@ public class AgentToolReasoner {
                         step == null ? "No structured step was returned. Reply with action USE_TOOL or FINAL."
                                 : "Unknown action '" + step.action() + "'. Use action USE_TOOL or FINAL."));
                 continue;
+            }
+
+            if (traceService != null) {
+                traceService.recordLLMReasoning(startupId, null, requestingAgent, "TOOL_REASONING",
+                        step.isFinal() ? "FINAL_RESPONSE" : ("USE_TOOL: " + step.trimmedToolName()),
+                        java.util.Map.of("action", step.action() != null ? step.action() : "",
+                                "toolName", step.trimmedToolName() != null ? step.trimmedToolName() : "",
+                                "reason", step.reason() != null ? step.reason() : ""));
             }
 
             if (step.isFinal()) {

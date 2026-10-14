@@ -21,7 +21,6 @@ interface Employee3DProps {
   activity: EmployeeActivity;
   inBoardroom: boolean;
   isCurrentSpeaker: boolean;
-  speechText?: string | null;
   onSelectDepartment?: (dept: string) => void;
 }
 
@@ -165,7 +164,6 @@ function Employee3DComponent({
   activity,
   inBoardroom,
   isCurrentSpeaker,
-  speechText,
   onSelectDepartment,
 }: Employee3DProps) {
   const groupRef = useRef<THREE.Group>(null);
@@ -363,19 +361,10 @@ function Employee3DComponent({
         <pointLight position={[0, 1.8, 0]} color="#fbbf24" intensity={2.2} distance={3.2} />
       )}
 
-      {/* Floating 3D Speech Bubble */}
-      {inBoardroom && isCurrentSpeaker && speechText && (
-        <Html position={[0, 1.6, 0]} center distanceFactor={8}>
-          <div className="bg-slate-900/95 text-amber-300 backdrop-blur-md px-3 py-1.5 rounded-xl border border-amber-500/60 text-xs font-semibold shadow-2xl max-w-xs animate-bounce pointer-events-none whitespace-normal text-center">
-            💬 <span className="text-white font-bold">{info.name}:</span> "{speechText}"
-          </div>
-        </Html>
-      )}
-
       {/* Floating 3D Blocker Badge */}
       {activity === "BLOCKED" && (
-        <Html position={[0, 1.45, 0]} center distanceFactor={8}>
-          <div className="bg-rose-950/95 text-rose-300 backdrop-blur-md px-2.5 py-1 rounded-lg border border-rose-500/60 text-[11px] font-bold shadow-xl animate-bounce pointer-events-none text-center">
+        <Html position={[0, 1.45, 0]} center distanceFactor={8} zIndexRange={[10, 0]}>
+          <div className="bg-rose-950/95 text-rose-300 backdrop-blur-md px-2.5 py-1 rounded-lg border border-rose-500/60 text-[11px] font-bold shadow-xl animate-bounce pointer-events-none text-center whitespace-nowrap">
             ⚠️ BLOCKED
           </div>
         </Html>

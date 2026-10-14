@@ -148,6 +148,12 @@ public class AgentRecoveryEngine {
             return AgentRecoveryOutcome.failed("Null recovery response.");
         }
 
+        if (llmProperties.isRealMode() && llm.isRealProvider()) {
+            traceService.recordLLMReasoning(request.startupId(), null, request.failedAgent(), "RECOVERY_DECISION",
+                    response.strategy().name(),
+                    Map.of("strategy", response.strategy().name(), "plan", response.recoveryPlan() != null ? response.recoveryPlan() : "", "handoffReason", response.handoffReason() != null ? response.handoffReason() : ""));
+        }
+
         switch (response.strategy()) {
             case HANDOFF -> {
                 AgentType target = response.targetAgent();
@@ -167,6 +173,7 @@ public class AgentRecoveryEngine {
                         Map.of("failedAgent", request.failedAgent().name(), "targetAgent", target.name(), "reason", reason));
 
                 traceService.recordRecovery(request.startupId(), null, request.failedAgent(), "HANDOFF", target, "HANDOFF_SUCCESS");
+                traceService.recordHandoff(request.startupId(), null, request.failedAgent(), target, reason, payload);
                 traceService.recordAgentMessage(request.startupId(), null, request.failedAgent(), target, "RECOVERY_HANDOFF", payload);
 
                 return AgentRecoveryOutcome.handoff(target, reason, payload);

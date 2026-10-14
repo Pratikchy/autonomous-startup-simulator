@@ -53,7 +53,7 @@ public class ExecutionTraceEntry {
     @Column(length = 100)
     private String action;
 
-    @Column(length = 100)
+    @Column(columnDefinition = "TEXT")
     private String decision;
 
     @Column(columnDefinition = "TEXT")

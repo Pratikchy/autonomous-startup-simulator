@@ -15,7 +15,6 @@ import com.startupsimulator.model.enums.EventType;
 import com.startupsimulator.service.AgentInbox;
 import com.startupsimulator.service.AgentService;
 import com.startupsimulator.service.EventService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -51,14 +50,9 @@ import java.util.Map;
  * changes what each agent does internally, never how the executor runs it.
  */
 import com.startupsimulator.agent.recovery.AgentRecoveryEngine;
-import com.startupsimulator.agent.recovery.AgentRecoveryOutcome;
 import com.startupsimulator.agent.recovery.AgentRecoveryRequest;
 import com.startupsimulator.trace.ExecutionTraceService;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component
@@ -185,6 +179,10 @@ public class OrchestrationActionExecutor {
                     "CEO completed the strategic analysis.",
                     agentPayload(AgentType.CEO, AgentState.WORKING, outcome.provider()));
             if (traceService != null) {
+                if (outcome.usedRealLlm()) {
+                    traceService.recordLLMReasoning(id, null, AgentType.CEO, "STRATEGIC_ANALYSIS", outcome.headlineMessage(),
+                            Map.of("provider", outcome.provider(), "summary", outcome.headlineMessage() != null ? outcome.headlineMessage() : ""));
+                }
                 traceService.recordAgentAction(id, null, AgentType.CEO, "ANALYSIS", outcome.headlineMessage(), outcome.provider());
             }
         }
@@ -245,6 +243,10 @@ public class OrchestrationActionExecutor {
                     type.getDisplayName() + " completed its analysis.",
                     agentPayload(type, AgentState.WORKING, outcome.provider()));
             if (traceService != null) {
+                if (outcome.usedRealLlm()) {
+                    traceService.recordLLMReasoning(id, null, type, type.name() + "_ANALYSIS", outcome.headlineMessage(),
+                            Map.of("provider", outcome.provider(), "summary", outcome.headlineMessage() != null ? outcome.headlineMessage() : ""));
+                }
                 traceService.recordAgentAction(id, null, type, "ANALYSIS", outcome.headlineMessage(), outcome.provider());
             }
         }

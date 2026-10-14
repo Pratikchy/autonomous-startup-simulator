@@ -48,7 +48,9 @@ public class JustDoWorkLLMService implements LLMService {
                 ? props.getResilience().toRetryPolicy()
                 : new RetryPolicy();
         LlmProperties.JustDoWork cfg = props != null ? props.getJustdowork() : new LlmProperties.JustDoWork();
+        int timeoutSeconds = props != null ? props.getRequestTimeoutSeconds() : 0;
         this.restClient = RestClient.builder()
+                .requestFactory(LlmHttpClients.timedRequestFactory(timeoutSeconds))
                 .baseUrl(cfg.getBaseUrl())
                 .defaultHeader("Authorization", "Bearer " + safeKey(cfg.getApiKey()))
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)

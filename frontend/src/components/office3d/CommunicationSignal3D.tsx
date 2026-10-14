@@ -92,8 +92,8 @@ function SignalItem({ signal }: { signal: ActiveSignal }) {
       </mesh>
 
       {/* Temporary Floating Signal Label */}
-      <Html position={midPoint} center distanceFactor={8}>
-        <div className="bg-slate-900/90 text-white backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700/80 text-[10px] font-bold shadow-xl animate-fade-in pointer-events-none whitespace-normal select-none">
+      <Html position={midPoint} center distanceFactor={8} zIndexRange={[10, 0]}>
+        <div className="bg-slate-900/90 text-white backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700/80 text-[10px] font-bold shadow-xl animate-fade-in pointer-events-none whitespace-nowrap select-none">
           💬 {signal.from} → {signal.to}
         </div>
       </Html>

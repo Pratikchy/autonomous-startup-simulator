@@ -5,7 +5,6 @@ import com.startupsimulator.config.AiExecutionMode;
 import com.startupsimulator.config.LlmProperties;
 import com.startupsimulator.model.Startup;
 import com.startupsimulator.resilience.RetryExecutor;
-import com.startupsimulator.resilience.RetryPolicy;
 import com.startupsimulator.resilience.Sleeper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

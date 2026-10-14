@@ -37,17 +37,6 @@ import java.util.Map;
  * {@link #scriptedDecision} and never reachable from the REAL branch.
  */
 import com.startupsimulator.trace.ExecutionTraceService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class OrchestrationDecisionEngine {
@@ -140,6 +129,11 @@ public class OrchestrationDecisionEngine {
         String headline = describe(v);
         emitAccepted(id, decision, v, usedRealLlm);
         if (traceService != null && id != null) {
+            if (usedRealLlm) {
+                traceService.recordLLMReasoning(id, null, "ORCHESTRATOR", "ORCHESTRATION_DECISION",
+                        decision != null ? decision.reasonOrEmpty() : headline,
+                        Map.of("action", v.action().name(), "targetAgent", v.resolvedAgent() != null ? v.resolvedAgent().name() : "", "rationale", decision != null ? decision.rationaleOrEmpty() : headline));
+            }
             traceService.recordOrchestrationDecision(id, null, v.resolvedAgent(),
                     v.action().name(),
                     decision != null ? decision.reason() : headline,

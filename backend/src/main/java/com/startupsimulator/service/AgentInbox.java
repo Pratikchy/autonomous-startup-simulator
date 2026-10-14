@@ -6,7 +6,6 @@ import com.startupsimulator.model.AgentMessage;
 import com.startupsimulator.model.enums.AgentType;
 import com.startupsimulator.model.enums.EventType;
 import com.startupsimulator.repository.AgentMessageRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

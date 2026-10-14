@@ -42,7 +42,7 @@ export const Desk3D = memo(function Desk3D({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   scale = 1,
-  color = "#3d2b1a",
+  color = "#5c4033",
 }: {
   position?: [number, number, number];
   rotation?: [number, number, number];
@@ -51,17 +51,17 @@ export const Desk3D = memo(function Desk3D({
 }) {
   return (
     <group position={position} rotation={rotation} scale={scale}>
-      {/* Desktop Surface */}
+      {/* Desktop Surface — warm ivory/cream */}
       <mesh geometry={geoDeskTop} position={[0, 0.72, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color={color} roughness={0.3} metalness={0.3} />
+        <meshStandardMaterial color={color} roughness={0.14} metalness={0.04} />
       </mesh>
-      {/* Desk Edge Trim */}
+      {/* Desk Edge Trim — walnut frame */}
       <mesh geometry={geoDeskTrim} position={[0, 0.74, 0]}>
-        <meshStandardMaterial color="#5c4033" roughness={0.45} />
+        <meshStandardMaterial color="#422810" roughness={0.32} />
       </mesh>
-      {/* Desk Mat */}
+      {/* Desk Mat — muted sage, restrained */}
       <mesh geometry={geoDeskMat} position={[0, 0.748, 0.05]}>
-        <meshStandardMaterial color="#0f172a" roughness={0.7} />
+        <meshStandardMaterial color="#2f3d33" roughness={0.58} />
       </mesh>
 
       {/* Metallic Desk Legs */}
@@ -121,7 +121,7 @@ export const Chair3D = memo(function Chair3D({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   scale = 1,
-  color = "#2d3748",
+  color = "#3a2d1f",
 }: {
   position?: [number, number, number];
   rotation?: [number, number, number];
@@ -179,11 +179,11 @@ export const ExecutiveDesk3D = memo(function ExecutiveDesk3D({
     <group position={position} rotation={rotation}>
       {/* Main Wood Top */}
       <mesh geometry={geoExecDeskTop} position={[0, 0.75, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color={color} roughness={0.2} metalness={0.1} />
+        <meshStandardMaterial color={color} roughness={0.22} metalness={0.14} />
       </mesh>
       {/* Leather Inlay Pad */}
       <mesh geometry={geoExecInlay} position={[0, 0.795, 0]}>
-        <meshStandardMaterial color="#1c1917" roughness={0.7} />
+        <meshStandardMaterial color="#eee8dc" roughness={0.55} />
       </mesh>
       {/* Executive Keyboard & Mouse */}
       <group position={[0, 0.805, -0.23]}>

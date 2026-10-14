@@ -13,8 +13,8 @@ export default function TasksSidebar() {
   const tasks = useSim((s) => s.tasks);
 
   return (
-    <aside className="w-72 shrink-0 glass border-r border-white/5 flex flex-col">
-      <div className="px-4 py-3 border-b border-white/5">
+    <aside className="w-72 shrink-0 glass border-r border-white/5 flex flex-col min-h-0 min-w-0">
+      <div className="px-4 py-3 border-b border-white/5 shrink-0">
         <h2 className="text-sm font-bold text-white">Task Board</h2>
         <p className="text-[11px] text-slate-400">
           {tasks.filter((t) => t.status === "COMPLETED").length}/{tasks.length}{" "}

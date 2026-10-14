@@ -37,9 +37,18 @@ public class StartupMetricsService {
             );
         }
 
-        // 1. Overall Progress (Weighted Average)
-        double totalProgressSum = tasks.stream().mapToDouble(ExecutionTask::getProgress).sum();
-        double overallProgress = Math.min(100.0, Math.max(0.0, totalProgressSum / tasks.size()));
+        // 1. Overall Progress (effort-weighted by estimatedDays, so a task's
+        // contribution is proportional to its share of total planned work rather
+        // than counting every task equally).
+        double totalWork = tasks.stream()
+                .mapToDouble(t -> Math.max(1, t.getEstimatedDays()))
+                .sum();
+        double doneWork = tasks.stream()
+                .mapToDouble(t -> (t.getProgress() / 100.0) * Math.max(1, t.getEstimatedDays()))
+                .sum();
+        double overallProgress = totalWork == 0.0
+                ? 0.0
+                : Math.min(100.0, Math.max(0.0, (doneWork / totalWork) * 100.0));
 
         // 2. Department Specific Progress Metrics
         double devProgress = calcDepartmentProgress(tasks, AgentType.DEVELOPMENT);

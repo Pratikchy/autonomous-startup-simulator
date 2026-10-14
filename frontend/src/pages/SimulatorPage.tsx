@@ -23,10 +23,9 @@ export default function SimulatorPage({ sseConnected }: { sseConnected: boolean 
 
   const phase = startup?.currentPhase;
 
-  // Auto-open the boardroom when the team convenes; auto-close on completion.
+  // Auto-open the execution drawer when the build phase begins. The boardroom
+  // debate is surfaced on demand via the BoardroomView modal, not the sidebar.
   useEffect(() => {
-    if (phase === "DEBATE") setBoardroom(true);
-    if (phase === "COMPLETED") setBoardroom(false);
     if (phase === "EXECUTION" || executionState?.isRunning) setShowExecution(true);
   }, [phase, executionState?.isRunning]);
 
@@ -40,6 +39,7 @@ export default function SimulatorPage({ sseConnected }: { sseConnected: boolean 
       <TopBar sseConnected={sseConnected} onOpenBlueprint={openBlueprint} />
 
       <div className="flex-1 flex min-h-0 relative">
+        {/* Left sidebar: Task Board */}
         <TasksSidebar />
 
         {/* Office hero + Execution view */}

@@ -207,12 +207,57 @@ public class ExecutionTraceService {
     }
 
     @Transactional
-    public void recordTaskStateChange(Long startupId, String traceId, Long taskId, String taskTitle, TaskStatus oldStatus, TaskStatus newStatus) {
+    public void recordLLMReasoning(Long startupId, String traceId, String agent, String actionContext, String summary, Map<String, Object> details) {
+        // The free-text reasoning summary belongs in the TEXT-mapped `reason`
+        // column, NOT in the short-label `decision` column — storing it in both
+        // previously overflowed `decision` and crashed the simulation on long
+        // CEO responses. `action` carries the short reasoning context label.
+        recordEntry(startupId, traceId, ExecutionTraceType.LLM_REASONING,
+                agent, null, null,
+                actionContext, null, summary,
+                null, null, null, "COMPLETED", details);
+    }
+
+    @Transactional
+    public void recordLLMReasoning(Long startupId, String traceId, AgentType agent, String actionContext, String summary, Map<String, Object> details) {
+        recordLLMReasoning(startupId, traceId, agent != null ? agent.name() : null, actionContext, summary, details);
+    }
+
+    @Transactional
+    public void recordHandoff(Long startupId, String traceId, AgentType sender, AgentType recipient, String reason, String payload) {
+        recordEntry(startupId, traceId, ExecutionTraceType.HANDOFF,
+                sender != null ? sender.name() : null,
+                sender != null ? sender.name() : null,
+                recipient != null ? recipient.name() : null,
+                "HANDOFF", null, reason,
+                null, null, null, "HANDOFF_SUCCESS",
+                Map.of("reason", reason != null ? reason : "", "payload", payload != null ? payload : ""));
+    }
+
+    @Transactional
+    public void recordTaskStateChange(Long startupId, String traceId, String agent, Long taskId, String taskTitle, TaskStatus oldStatus, TaskStatus newStatus, String reason) {
+        if (oldStatus == newStatus) {
+            return;
+        }
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("taskId", taskId != null ? taskId : 0L);
+        payload.put("title", taskTitle != null ? taskTitle : "");
+        payload.put("oldStatus", oldStatus != null ? oldStatus.name() : "");
+        payload.put("newStatus", newStatus != null ? newStatus.name() : "");
+        if (reason != null) {
+            payload.put("reason", reason);
+        }
+
         recordEntry(startupId, traceId, ExecutionTraceType.TASK_STATE_CHANGE,
-                "TASK_BOARD", null, null,
-                "MUTATE_TASK", null, "Task #" + taskId + " status changed",
+                agent != null ? agent : "TASK_BOARD", null, null,
+                "MUTATE_TASK", null, reason != null ? reason : ("Task #" + taskId + " status changed to " + (newStatus != null ? newStatus.name() : "UPDATED")),
                 null, null, null, newStatus != null ? newStatus.name() : "UPDATED",
-                Map.of("taskId", taskId != null ? taskId : 0L, "title", taskTitle != null ? taskTitle : "", "oldStatus", oldStatus != null ? oldStatus.name() : "", "newStatus", newStatus != null ? newStatus.name() : ""));
+                payload);
+    }
+
+    @Transactional
+    public void recordTaskStateChange(Long startupId, String traceId, Long taskId, String taskTitle, TaskStatus oldStatus, TaskStatus newStatus) {
+        recordTaskStateChange(startupId, traceId, null, taskId, taskTitle, oldStatus, newStatus, null);
     }
 
     @Transactional(readOnly = true)

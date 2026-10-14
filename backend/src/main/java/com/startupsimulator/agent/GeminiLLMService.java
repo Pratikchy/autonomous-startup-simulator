@@ -49,7 +49,9 @@ public class GeminiLLMService implements LLMService {
                 ? props.getResilience().toRetryPolicy()
                 : new RetryPolicy();
         LlmProperties.Gemini cfg = props != null ? props.getGemini() : new LlmProperties.Gemini();
+        int timeoutSeconds = props != null ? props.getRequestTimeoutSeconds() : 0;
         this.restClient = RestClient.builder()
+                .requestFactory(LlmHttpClients.timedRequestFactory(timeoutSeconds))
                 .baseUrl(cfg.getBaseUrl())
                 .defaultHeader("x-goog-api-key", safeKey(cfg.getApiKey()))
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)

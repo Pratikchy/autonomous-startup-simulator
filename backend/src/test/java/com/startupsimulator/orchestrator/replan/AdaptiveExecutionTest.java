@@ -11,7 +11,6 @@ import com.startupsimulator.model.AgentMessage;
 import com.startupsimulator.model.ExecutionTask;
 import com.startupsimulator.model.Startup;
 import com.startupsimulator.model.enums.AgentType;
-import com.startupsimulator.model.enums.EventType;
 import com.startupsimulator.model.enums.SimulationPhase;
 import com.startupsimulator.model.enums.TaskPriority;
 import com.startupsimulator.model.enums.TaskStatus;

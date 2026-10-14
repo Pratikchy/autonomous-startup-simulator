@@ -12,12 +12,13 @@ import com.startupsimulator.model.enums.TaskStatus;
 import com.startupsimulator.repository.AgentRepository;
 import com.startupsimulator.repository.ExecutionTaskRepository;
 import com.startupsimulator.repository.StartupRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.startupsimulator.trace.ExecutionTraceService;
 
 /**
  * Core engine responsible for driving Phase 2F Autonomous Startup Execution.
@@ -25,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * blocker handling, and real-time SSE broadcasts.
  */
 @Service
-@RequiredArgsConstructor
 public class ExecutionEngine {
 
     private final StartupRepository startupRepository;
@@ -37,6 +37,33 @@ public class ExecutionEngine {
     private final StartupMetricsService metricsService;
     private final BlockerService blockerService;
     private final ExecutionEventService executionEventService;
+    private final ExecutionTraceService traceService;
+
+    public ExecutionEngine(StartupRepository startupRepository, AgentRepository agentRepository,
+                           ExecutionTaskRepository taskRepository, BlueprintService blueprintService,
+                           TaskGenerator taskGenerator, TaskScheduler taskScheduler,
+                           StartupMetricsService metricsService, BlockerService blockerService,
+                           ExecutionEventService executionEventService) {
+        this(startupRepository, agentRepository, taskRepository, blueprintService, taskGenerator, taskScheduler, metricsService, blockerService, executionEventService, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ExecutionEngine(StartupRepository startupRepository, AgentRepository agentRepository,
+                           ExecutionTaskRepository taskRepository, BlueprintService blueprintService,
+                           TaskGenerator taskGenerator, TaskScheduler taskScheduler,
+                           StartupMetricsService metricsService, BlockerService blockerService,
+                           ExecutionEventService executionEventService, ExecutionTraceService traceService) {
+        this.startupRepository = startupRepository;
+        this.agentRepository = agentRepository;
+        this.taskRepository = taskRepository;
+        this.blueprintService = blueprintService;
+        this.taskGenerator = taskGenerator;
+        this.taskScheduler = taskScheduler;
+        this.metricsService = metricsService;
+        this.blockerService = blockerService;
+        this.executionEventService = executionEventService;
+        this.traceService = traceService;
+    }
 
     // In-memory simulation state trackers per startupId
     private final Map<Long, Integer> currentDays = new ConcurrentHashMap<>();
@@ -121,8 +148,14 @@ public class ExecutionEngine {
                 task.setActualDays(task.getActualDays() + 1);
 
                 if (newProgress >= 100.0) {
+                    TaskStatus oldStatus = task.getStatus();
                     task.setStatus(TaskStatus.COMPLETED);
                     taskRepository.save(task);
+                    if (traceService != null) {
+                        traceService.recordTaskStateChange(startupId, null,
+                                task.getDepartment() != null ? task.getDepartment().name() : null,
+                                task.getId(), task.getTitle(), oldStatus, TaskStatus.COMPLETED, "Task completed");
+                    }
                     updateAgentState(startupId, task.getDepartment(), AgentState.IDLE, "Task completed");
                     executionEventService.emitTaskCompleted(startupId, task);
                 } else {

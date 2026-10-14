@@ -5,7 +5,6 @@ import com.startupsimulator.agent.CeoAgent;
 import com.startupsimulator.agent.CeoAnalysisException;
 import com.startupsimulator.agent.CeoAnalysisOutcome;
 import com.startupsimulator.agent.FakeLLMService;
-import com.startupsimulator.agent.LLMService;
 import com.startupsimulator.agent.MockLLMService;
 import com.startupsimulator.agent.StartupContext;
 import com.startupsimulator.config.AiExecutionMode;

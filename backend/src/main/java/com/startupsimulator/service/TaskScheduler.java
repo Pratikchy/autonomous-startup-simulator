@@ -3,7 +3,7 @@ package com.startupsimulator.service;
 import com.startupsimulator.model.ExecutionTask;
 import com.startupsimulator.model.enums.TaskStatus;
 import com.startupsimulator.repository.ExecutionTaskRepository;
-import lombok.RequiredArgsConstructor;
+import com.startupsimulator.trace.ExecutionTraceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +17,20 @@ import java.util.stream.Collectors;
  * to available department agents.
  */
 @Service
-@RequiredArgsConstructor
 public class TaskScheduler {
 
     private final ExecutionTaskRepository taskRepository;
+    private final ExecutionTraceService traceService;
+
+    public TaskScheduler(ExecutionTaskRepository taskRepository) {
+        this(taskRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public TaskScheduler(ExecutionTaskRepository taskRepository, ExecutionTraceService traceService) {
+        this.taskRepository = taskRepository;
+        this.traceService = traceService;
+    }
 
     @Transactional
     public List<ExecutionTask> scheduleAvailableTasks(Long startupId) {
@@ -47,11 +57,17 @@ public class TaskScheduler {
 
                 // Assign if dependencies satisfied and department is not currently occupied
                 if (dependenciesSatisfied && !busyDepartments.contains(task.getDepartment().name())) {
+                    TaskStatus oldStatus = task.getStatus();
                     task.setStatus(TaskStatus.IN_PROGRESS);
                     if (task.getProgress() <= 0.0) {
                         task.setProgress(1.0);
                     }
                     taskRepository.save(task);
+                    if (traceService != null) {
+                        traceService.recordTaskStateChange(startupId, null,
+                                task.getDepartment() != null ? task.getDepartment().name() : null,
+                                task.getId(), task.getTitle(), oldStatus, TaskStatus.IN_PROGRESS, "Scheduled for execution");
+                    }
                     newlyScheduled.add(task);
                     busyDepartments.add(task.getDepartment().name());
                 }

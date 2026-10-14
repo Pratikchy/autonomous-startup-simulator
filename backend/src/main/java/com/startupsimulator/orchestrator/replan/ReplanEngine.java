@@ -25,21 +25,8 @@ import java.util.*;
  * it via {@link ReplanValidator}, and applies it to the DB via {@link TaskPlanMutationService}.
  */
 import com.startupsimulator.trace.ExecutionTraceService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 
-/**
- * CA3 Phase 7: The adaptive replanning engine. When execution encounters a blocker or
- * new requirement, it diagnoses the situation, prompts the LLM for a structured
- * {@link ReplanProposal} (or uses a deterministic proposal in SCRIPTED_DEMO), validates
- * it via {@link ReplanValidator}, and applies it to the DB via {@link TaskPlanMutationService}.
- */
 @Slf4j
 @Service
 public class ReplanEngine {
@@ -96,6 +83,7 @@ public class ReplanEngine {
 
         // Mark blocked task as BLOCKED if not already marked
         if (blockedTask != null && blockedTask.getStatus() != TaskStatus.BLOCKED) {
+            TaskStatus oldStatus = blockedTask.getStatus();
             blockedTask.setStatus(TaskStatus.BLOCKED);
             if (blockerReason != null && !blockerReason.isBlank()) {
                 blockedTask.setBlockerReason(blockerReason);
@@ -104,6 +92,11 @@ public class ReplanEngine {
             eventService.record(startupId, EventType.TASK_BLOCKED,
                     "Task #" + blockedTask.getId() + " (" + blockedTask.getTitle() + ") marked BLOCKED: " + blockerReason,
                     Map.of("taskId", blockedTask.getId(), "blockerReason", blockerReason == null ? "" : blockerReason));
+            if (traceService != null) {
+                traceService.recordTaskStateChange(startupId, null,
+                        blockedTask.getDepartment() != null ? blockedTask.getDepartment().name() : null,
+                        blockedTask.getId(), blockedTask.getTitle(), oldStatus, TaskStatus.BLOCKED, blockerReason);
+            }
             currentTasks = taskRepository.findByStartupIdOrderById(startupId);
         }
 
@@ -156,6 +149,11 @@ public class ReplanEngine {
         mutationService.applyReplan(startupId, proposal);
 
         if (traceService != null) {
+            if (usesRealLlm()) {
+                traceService.recordLLMReasoning(startupId, null, "REPLAN_ENGINE", "ADAPTIVE_REPLAN",
+                        proposal != null ? proposal.reasonOrEmpty() : "Replan accepted",
+                        Map.of("triggeringTaskId", triggeringTaskId != null ? triggeringTaskId : 0L, "blockerReason", blockerReason != null ? blockerReason : ""));
+            }
             traceService.recordReplan(startupId, null, null, triggeringTaskId, blockerReason,
                     proposal != null ? proposal.reasonOrEmpty() : "Replan accepted", true, null);
         }
