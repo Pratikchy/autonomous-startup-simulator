@@ -24,3 +24,7 @@ yarn-error.log*
 .vscode/
 *.iml
 .DS_Store
+
+# ---- Generated app workspaces (local runtime data) ----
+backend/workspaces/
+frontend/tsconfig.tsbuildinfo

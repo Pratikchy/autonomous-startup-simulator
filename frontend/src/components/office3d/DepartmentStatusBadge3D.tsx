@@ -120,12 +120,12 @@ function DepartmentStatusBadge3DComponent({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={onSelect}
-        className={`bg-slate-950/90 backdrop-blur-md px-2 py-1 rounded-lg border shadow-lg transition-all duration-200 cursor-pointer select-none ${
+        className={`bg-slate-950/95 px-2.5 py-1 rounded-lg border shadow-xl transition-colors duration-150 cursor-pointer select-none ${
           config.borderColor
         } ${
           isActive
-            ? "ring-2 ring-cyan-400/40 scale-105 bg-slate-900/95"
-            : "opacity-90 hover:opacity-100 hover:scale-105"
+            ? "ring-2 ring-cyan-400/50 scale-105 bg-slate-900"
+            : "opacity-95 hover:opacity-100 hover:scale-105"
         } ${showDetails ? "max-w-[180px]" : "max-w-[130px]"}`}
       >
         {/* LEVEL 1 (Room identity) & LEVEL 2 (State) */}

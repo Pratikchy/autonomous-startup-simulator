@@ -22,6 +22,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class StartupSimulatorApplication {
 
     public static void main(String[] args) {
+        com.startupsimulator.config.DotenvLoader.load();
         SpringApplication.run(StartupSimulatorApplication.class, args);
     }
 }

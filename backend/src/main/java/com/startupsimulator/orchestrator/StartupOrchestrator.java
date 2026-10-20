@@ -3,13 +3,11 @@ package com.startupsimulator.orchestrator;
 import com.startupsimulator.agent.*;
 import com.startupsimulator.model.*;
 import com.startupsimulator.model.enums.*;
-import com.startupsimulator.orchestrator.decision.OrchestrationAction;
-import com.startupsimulator.orchestrator.decision.OrchestrationDecisionEngine;
-import com.startupsimulator.orchestrator.decision.OrchestrationDecisionOutcome;
-import com.startupsimulator.orchestrator.decision.OrchestrationStateSnapshot;
+import com.startupsimulator.orchestrator.decision.*;
 import com.startupsimulator.orchestrator.decision.OrchestrationStateSnapshot.CompletedAnalysis;
-import com.startupsimulator.orchestrator.decision.OrchestrationStateSnapshotFactory;
-import com.startupsimulator.orchestrator.decision.OrchestrationDecision;
+import com.startupsimulator.dto.response.DebateDto;
+import com.startupsimulator.orchestrator.replan.ReplanEngine;
+import com.startupsimulator.orchestrator.replan.ReplanValidationOutcome;
 import com.startupsimulator.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +20,8 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Drives the mock simulation timeline for a startup: ANALYSIS -> DEBATE ->
@@ -42,7 +42,6 @@ public class StartupOrchestrator {
     private final MessageService messageService;
     @SuppressWarnings("unused")
     private final AgentInbox agentInbox;
-    @SuppressWarnings("unused")
     private final DebateService debateService;
     @SuppressWarnings("unused")
     private final DecisionService decisionService;
@@ -70,13 +69,20 @@ public class StartupOrchestrator {
     private final OrchestrationActionExecutor actionExecutor;
 
     // CA3 Phase 7: adaptive execution & replanning engine.
-    private final com.startupsimulator.orchestrator.replan.ReplanEngine replanEngine;
+    private final ReplanEngine replanEngine;
 
     @Value("${app.simulation.tick-interval-ms:900}")
     private long tickIntervalMs;
 
     private static final List<AgentType> ORDER =
             List.of(AgentType.CEO, AgentType.DEVELOPMENT, AgentType.MARKETING, AgentType.FINANCE);
+
+    // Concurrency guard: tracks startups with an actively running worker thread to prevent duplicate workers
+    private Set<Long> activeSimulations = ConcurrentHashMap.newKeySet();
+
+    public boolean isSimulationActive(Long startupId) {
+        return activeSimulations.contains(startupId);
+    }
 
     /**
      * CA3 Phase 6B: hard upper bound on orchestration iterations. The dynamic loop
@@ -91,27 +97,27 @@ public class StartupOrchestrator {
     /**
      * Run the full simulation asynchronously. Safe to call once per startup;
      * a second call while a simulation has already started is ignored.
-     *
-     * <p>CA3 Phase 6B: the runtime no longer walks a fixed
-     * CEO→DEVELOPMENT→MARKETING→FINANCE→DEBATE→FINALIZE sequence. It runs a
-     * bounded dynamic loop ({@link #runDynamicOrchestration}) in which the
-     * {@link OrchestrationDecisionEngine} genuinely chooses the next action, the
-     * Phase 6A validator judges it, and {@link OrchestrationActionExecutor}
-     * executes exactly the accepted action — so the accepted decision controls
-     * the actual next step.
      */
     @Async("simulationScheduler")
     public void simulate(Long startupId, double speed) {
-        Startup startup = startupService.getStartup(startupId);
-        if (startup.isSimulationStarted()) {
-            log.info("Simulation already started for startup {}", startupId);
+        if (!activeSimulations.add(startupId)) {
+            log.info("Simulation worker already active for startup {}", startupId);
             return;
         }
-        startup.setSimulationStarted(true);
-        startup.setCurrentPhase(SimulationPhase.ANALYSIS);
-        startupService.save(startup);
-
         try {
+            Startup startup = startupService.getStartup(startupId);
+            if (startup.isSimulationCompleted() || startup.getCurrentPhase() == SimulationPhase.COMPLETED) {
+                log.info("Simulation already completed for startup {}", startupId);
+                return;
+            }
+            if (startup.isSimulationStarted()) {
+                log.info("Simulation already started for startup {}", startupId);
+                return;
+            }
+            startup.setSimulationStarted(true);
+            startup.setCurrentPhase(SimulationPhase.ANALYSIS);
+            startupService.save(startup);
+
             StartupContext ctx = contextService.buildContext(startup);
             runDynamicOrchestration(ctx, speed);
         } catch (InterruptedException e) {
@@ -119,6 +125,41 @@ public class StartupOrchestrator {
             log.warn("Simulation interrupted for startup {}", startupId);
         } catch (Exception e) {
             log.error("Simulation failed for startup {}", startupId, e);
+        } finally {
+            activeSimulations.remove(startupId);
+        }
+    }
+
+    /**
+     * Safely resume an interrupted simulation asynchronously after backend restart.
+     * Prevents duplicate workers and avoids repeating completed steps.
+     */
+    @Async("simulationScheduler")
+    public void resumeSimulation(Long startupId, double speed) {
+        if (!activeSimulations.add(startupId)) {
+            log.info("Simulation worker already active for startup {}", startupId);
+            return;
+        }
+        try {
+            Startup startup = startupService.getStartup(startupId);
+            if (startup.isSimulationCompleted() || startup.getCurrentPhase() == SimulationPhase.COMPLETED) {
+                log.info("Startup {} is already completed; skipping recovery.", startupId);
+                return;
+            }
+            log.info("Resuming simulation for startup {}", startupId);
+            eventService.record(startupId, EventType.ORCHESTRATION_ACTION_STARTED,
+                    "Resuming interrupted simulation after backend restart.",
+                    Map.of("startupId", startupId, "phase", startup.getCurrentPhase().name()));
+
+            StartupContext ctx = contextService.buildContext(startup);
+            runDynamicOrchestration(ctx, speed);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Resumed simulation interrupted for startup {}", startupId);
+        } catch (Exception e) {
+            log.error("Resumed simulation failed for startup {}", startupId, e);
+        } finally {
+            activeSimulations.remove(startupId);
         }
     }
 
@@ -153,6 +194,41 @@ public class StartupOrchestrator {
         boolean debateStarted = false;
         boolean debateComplete = false;
         boolean persisted = false;
+
+        // Restore existing task state and completed agents to avoid repeating completed steps
+        List<AgentTask> existingTasks = taskService.list(id);
+        if (existingTasks != null) {
+            for (AgentTask t : existingTasks) {
+                AgentType agent = t.getAgentType();
+                if (agent == null) continue;
+                taskIds.put(agent, t.getId());
+                if (t.getStatus() == TaskStatus.COMPLETED && t.getProgress() >= 100) {
+                    if (isAgentWorkVerified(ctx, agent)) {
+                        if (!completed.contains(agent)) {
+                            completed.add(agent);
+                        }
+                        pending.remove(agent);
+                        String headline = findLatestHeadlineForAgent(id, agent, t.getTitle());
+                        headlines.put(agent, headline);
+                    }
+                } else {
+                    // Partially completed or interrupted mid-step: reset agent state to IDLE so it can be re-run cleanly
+                    agentService.setState(id, agent, AgentState.IDLE, "Recovered — pending analysis.");
+                }
+            }
+        }
+
+        // Check if debate was already completed
+        List<DebateDto> debates = debateService.listDtos(id);
+        if (debates != null && !debates.isEmpty()) {
+            boolean anyComplete = debates.stream().anyMatch(d ->
+                    d.status() == DebateStatus.RESOLVED || d.status() == DebateStatus.COMPLETED_WITH_WARNINGS);
+            if (anyComplete) {
+                debateStarted = true;
+                debateComplete = true;
+                persisted = true;
+            }
+        }
 
         for (int step = 1; step <= MAX_ORCHESTRATION_STEPS; step++) {
             List<CompletedAnalysis> recentAnalyses = completed.stream()
@@ -387,22 +463,50 @@ public class StartupOrchestrator {
      */
     private void ensureAgentTask(StartupContext ctx, Map<AgentType, Long> taskIds,
                                  AgentType target, double speed) throws InterruptedException {
-        if (taskIds.containsKey(target)) {
-            return;
-        }
         Long id = ctx.startupId();
         StartupAgent agent = agentFor(target);
-        AgentTask task = taskService.create(id, target, shortTitle(target),
-                agent.initialObjective(ctx), priorityFor(target), "Analysis phase");
-        taskIds.put(target, task.getId());
-        eventService.record(id, EventType.TASK_CREATED,
-                target.getDisplayName() + " task: " + shortTitle(target),
-                agentPayload(target, null, shortTitle(target)));
+        Long taskId = taskIds.get(target);
+        if (taskId == null) {
+            AgentTask task = taskService.create(id, target, shortTitle(target),
+                    agent.initialObjective(ctx), priorityFor(target), "Analysis phase");
+            taskId = task.getId();
+            taskIds.put(target, taskId);
+            eventService.record(id, EventType.TASK_CREATED,
+                    target.getDisplayName() + " task: " + shortTitle(target),
+                    agentPayload(target, null, shortTitle(target)));
+        }
         agentService.setState(id, target, AgentState.WORKING, shortTitle(target) + "...");
         eventService.record(id, EventType.AGENT_STARTED_WORK,
                 target.getDisplayName() + " started working.",
                 agentPayload(target, AgentState.WORKING, shortTitle(target)));
         sleep(speed);
+    }
+
+    private boolean isAgentWorkVerified(StartupContext ctx, AgentType agent) {
+        if (agent == null) return false;
+        return switch (agent) {
+            case CEO -> ctx.getStartup().getExecutiveSummary() != null
+                    && !ctx.getStartup().getExecutiveSummary().isBlank();
+            case DEVELOPMENT -> (ctx.getTechnicalPlan() != null && ctx.getTechnicalPlan().getArchitecture() != null)
+                    || !ctx.getMvpFeatures().isEmpty();
+            case MARKETING -> ctx.getMarketingPlan() != null
+                    && ctx.getMarketingPlan().getPositioning() != null;
+            case FINANCE -> ctx.getBudget() != null
+                    && (ctx.getBudget().getMonthlyBurn() > 0 || ctx.getBudget().getRunwayMonths() > 0);
+        };
+    }
+
+    private String findLatestHeadlineForAgent(Long startupId, AgentType agent, String defaultHeadline) {
+        List<com.startupsimulator.model.AgentMessage> messages = messageService.list(startupId);
+        if (messages != null) {
+            for (int i = messages.size() - 1; i >= 0; i--) {
+                com.startupsimulator.model.AgentMessage m = messages.get(i);
+                if (m.getAgentType() == agent && m.getContent() != null && !m.getContent().isBlank()) {
+                    return m.getContent();
+                }
+            }
+        }
+        return defaultHeadline;
     }
 
     /**
@@ -473,10 +577,11 @@ public class StartupOrchestrator {
     /**
      * CA3 Phase 7: Trigger adaptive execution replanning for a blocked task.
      */
-    public com.startupsimulator.orchestrator.replan.ReplanValidationOutcome triggerReplan(
+    public ReplanValidationOutcome triggerReplan(
             Long startupId, Long triggeringTaskId, String blockerReason) {
         List<AgentMessage> messages = messageService.list(startupId);
         String memoryContext = contextService.buildContext(startupService.getStartup(startupId)).getStartup().getOriginalIdea();
         return replanEngine.evaluateAndReplan(startupId, triggeringTaskId, blockerReason, messages, memoryContext);
     }
 }
+

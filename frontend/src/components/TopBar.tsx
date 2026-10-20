@@ -4,9 +4,13 @@ import { PHASES } from "../lib/theme";
 export default function TopBar({
   sseConnected,
   onOpenBlueprint,
+  onOpenAgentHistory,
+  onOpenGeneratedApp,
 }: {
   sseConnected: boolean;
   onOpenBlueprint: () => void;
+  onOpenAgentHistory?: () => void;
+  onOpenGeneratedApp?: () => void;
 }) {
   const startup = useSim((s) => s.startup);
   if (!startup) return null;
@@ -16,7 +20,15 @@ export default function TopBar({
   return (
     <header className="glass border-b border-white/5 px-5 py-3 flex items-center gap-6">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="grid place-items-center h-9 w-9 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 text-white font-bold">
+        <a
+          href="/"
+          className="text-xs text-slate-400 hover:text-white transition flex items-center gap-1 shrink-0 px-2.5 py-1 rounded-lg hover:bg-slate-800 border border-white/5"
+          title="Return to Saved Startups"
+        >
+          ← Startups
+        </a>
+        <div className="w-px h-5 bg-white/10" />
+        <div className="grid place-items-center h-9 w-9 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 text-white font-bold shrink-0">
           {startup.name.slice(0, 1)}
         </div>
         <div className="min-w-0">
@@ -65,6 +77,26 @@ export default function TopBar({
           />
           {sseConnected ? "Live" : "Offline"}
         </span>
+        {onOpenAgentHistory && (
+          <button
+            onClick={onOpenAgentHistory}
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-500/40 hover:bg-indigo-500/30 transition flex items-center gap-1.5 shadow-sm"
+            title="Inspect Agent Work History, tools, and execution traces"
+          >
+            <span>📜</span>
+            <span>Agent History</span>
+          </button>
+        )}
+        {onOpenGeneratedApp && (
+          <button
+            onClick={onOpenGeneratedApp}
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-sky-500/20 text-sky-300 ring-1 ring-sky-500/40 hover:bg-sky-500/30 transition flex items-center gap-1.5 shadow-sm"
+            title="Inspect generated real web application, files, and live preview"
+          >
+            <span>💻</span>
+            <span>Generated App</span>
+          </button>
+        )}
         <button
           onClick={onOpenBlueprint}
           disabled={!startup.simulationCompleted}

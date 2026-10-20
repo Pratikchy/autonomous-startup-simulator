@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+  h2:
+    console:
+      enabled: false
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+  simulation:
+    tick-interval-ms: 100
+  llm:
+    provider: mock
+  ai:
+    provider: mock
+    mode: REAL
+    gemini:
+      api-key: ""
+    justdowork:
+      api-key: ""
+    openai:
+      api-key: ""
+    request-timeout-seconds: 5
+    resilience:
+      max-attempts: 1
+      initial-backoff-ms: 10
+      backoff-multiplier: 1.0
+      max-backoff-ms: 10
+
+logging:
+  level:
+    com.startupsimulator: WARN

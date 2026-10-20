@@ -142,7 +142,7 @@ function OrchestratorCore3DComponent({
 
         {/* Floating 3D Orchestrator HUD Label (Elevated Crown Anchor) */}
         <Html position={[0, 3.1, 0]} center distanceFactor={9.5} zIndexRange={[15, 0]}>
-          <div className="bg-slate-950/90 text-cyan-300 backdrop-blur-md px-3 py-1 rounded-full border border-cyan-500/60 text-[10.5px] font-mono font-bold shadow-2xl flex items-center gap-1.5 pointer-events-none select-none whitespace-nowrap">
+          <div className="bg-slate-950/95 text-cyan-300 px-3 py-1 rounded-full border border-cyan-500/60 text-[10.5px] font-mono font-bold shadow-2xl flex items-center gap-1.5 pointer-events-none select-none whitespace-nowrap will-change-transform">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
             <span>⚡ ORCHESTRATOR: {orchestrationStatus.toUpperCase()}</span>
           </div>

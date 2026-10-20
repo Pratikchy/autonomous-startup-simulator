@@ -1,0 +1,93 @@
+{
+  "verifiedAt": "2026-10-19T10:55:53.634541+00:00",
+  "otherStartupsUnchangedAcrossReadEndpoints": {
+    "1": true
+  },
+  "changedExecutionTaskIds": [
+    3
+  ],
+  "agentTasksUnchanged": true,
+  "historyPreserved": true,
+  "startupDtoChanges": {
+    "updatedAt": {
+      "before": "2026-10-19T09:59:49.427576Z",
+      "after": "2026-10-19T10:55:17.193813Z"
+    }
+  },
+  "agentChanges": [
+    {
+      "id": 6,
+      "changes": {
+        "state": {
+          "before": "BLOCKED",
+          "after": "WORKING"
+        },
+        "currentActivity": {
+          "before": "Blocked: DEVELOPMENT execution blocked on Day 8: Dependencies delayed due to technical risk review.",
+          "after": "Resumed work on Core Database & API Infrastructure"
+        }
+      }
+    }
+  ],
+  "before": {
+    "day": 13,
+    "isRunning": true,
+    "isPaused": false,
+    "activeBlockerCount": 1
+  },
+  "after": {
+    "day": 13,
+    "isRunning": false,
+    "isPaused": true,
+    "activeBlockerCount": 0
+  },
+  "newHistory": {
+    "/events": [
+      {
+        "id": 206,
+        "startupId": 2,
+        "type": "EXECUTION_PAUSED",
+        "message": "\u23f8\ufe0f Startup execution paused.",
+        "payload": "{\"status\":\"PAUSED\"}",
+        "createdAt": "2026-10-19T10:55:17.146332Z"
+      },
+      {
+        "id": 207,
+        "startupId": 2,
+        "type": "TASK_STARTED",
+        "message": "\u26a1 Task started: Core Database & API Infrastructure",
+        "payload": "{\"agent\":\"Backend Eng\",\"taskId\":3,\"department\":\"DEVELOPMENT\"}",
+        "createdAt": "2026-10-19T10:55:31.352072Z"
+      },
+      {
+        "id": 208,
+        "startupId": 2,
+        "type": "EMPLOYEE_STARTED_WORK",
+        "message": "\ud83d\udc68\u200d\ud83d\udcbb Backend Eng began working on Core Database & API Infrastructure",
+        "payload": "{\"agent\":\"Backend Eng\",\"taskId\":3,\"department\":\"DEVELOPMENT\"}",
+        "createdAt": "2026-10-19T10:55:31.352959Z"
+      }
+    ],
+    "/trace": [
+      {
+        "id": 96,
+        "startupId": 2,
+        "traceId": "run-2",
+        "sequenceNumber": 75,
+        "timestamp": "2026-10-19T10:55:31.327796Z",
+        "type": "TASK_STATE_CHANGE",
+        "agent": "DEVELOPMENT",
+        "sender": null,
+        "recipient": null,
+        "action": "MUTATE_TASK",
+        "decision": null,
+        "reason": "Removed legacy calendar-injected risk-review blocker on explicit request; no review prerequisite exists in the task graph. Validated completed dependencies [2]; resumed without changing progress or actual days. Original blocker: DEVELOPMENT execution blocked on Day 8: Dependencies delayed due to technical risk review.",
+        "toolName": null,
+        "toolArguments": null,
+        "toolResult": null,
+        "outcome": "IN_PROGRESS",
+        "payload": "{\"taskId\":3,\"title\":\"Core Database & API Infrastructure\",\"oldStatus\":\"BLOCKED\",\"newStatus\":\"IN_PROGRESS\",\"reason\":\"Removed legacy calendar-injected risk-review blocker on explicit request; no review prerequisite exists in the task graph. Validated completed dependencies [2]; resumed without changing progress or actual days. Original blocker: DEVELOPMENT execution blocked on Day 8: Dependencies delayed due to technical risk review.\"}"
+      }
+    ]
+  }
+}

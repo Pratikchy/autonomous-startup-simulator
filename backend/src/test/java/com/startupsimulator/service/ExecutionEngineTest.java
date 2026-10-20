@@ -89,6 +89,7 @@ class ExecutionEngineTest {
                 "departmentProgress", Map.of("CEO", 10.0, "DEVELOPMENT", 0.0, "MARKETING", 0.0, "FINANCE", 0.0)
         ));
 
+        executionEngine.setAsyncExecutor(command -> {}); // Do not leak a real worker from this unit test.
         ExecutionStateDto state = executionEngine.startExecution(1L);
 
         assertNotNull(state);
@@ -111,7 +112,6 @@ class ExecutionEngineTest {
         task.setProgress(50.0);
 
         when(taskRepository.findByStartupIdOrderById(1L)).thenReturn(List.of(task));
-        when(blockerService.checkForSimulatedBlockers(eq(1L), anyInt())).thenReturn(Optional.empty());
         when(metricsService.calculateMetrics(eq(1L), anyInt())).thenReturn(Map.of(
                 "overallProgress", 100.0,
                 "mvpProgress", 100.0,

@@ -1,0 +1,5 @@
+{
+  "method": "POST",
+  "path": "/api/startups/2/execution/pause",
+  "attemptedAt": "2026-10-19T10:55:17.136051+00:00"
+}

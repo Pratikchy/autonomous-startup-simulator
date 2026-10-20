@@ -364,7 +364,7 @@ function Employee3DComponent({
       {/* Floating 3D Blocker Badge */}
       {activity === "BLOCKED" && (
         <Html position={[0, 1.45, 0]} center distanceFactor={8} zIndexRange={[10, 0]}>
-          <div className="bg-rose-950/95 text-rose-300 backdrop-blur-md px-2.5 py-1 rounded-lg border border-rose-500/60 text-[11px] font-bold shadow-xl animate-bounce pointer-events-none text-center whitespace-nowrap">
+          <div className="bg-rose-950/95 text-rose-300 backdrop-blur-md px-2.5 py-1 rounded-lg border border-rose-500/60 text-[11px] font-bold shadow-xl animate-bounce pointer-events-none text-center whitespace-nowrap will-change-transform">
             ⚠️ BLOCKED
           </div>
         </Html>
@@ -378,7 +378,7 @@ function Employee3DComponent({
         {/* 1. HEAD & NECK */}
         <group ref={headRef} position={[0, 0.94, 0.04]}>
           {/* Visible Neck */}
-          <mesh geometry={geoNeck} position={[0, -0.06, 0]} castShadow>
+          <mesh geometry={geoNeck} position={[0, -0.06, 0]}>
             <meshStandardMaterial color="#fed7aa" roughness={0.5} />
           </mesh>
 
@@ -388,10 +388,10 @@ function Employee3DComponent({
           </mesh>
 
           {/* Ears */}
-          <mesh geometry={geoEar} position={[-0.115, 0, 0]} castShadow>
+          <mesh geometry={geoEar} position={[-0.115, 0, 0]}>
             <meshStandardMaterial color="#fbcfe8" roughness={0.5} />
           </mesh>
-          <mesh geometry={geoEar} position={[0.115, 0, 0]} castShadow>
+          <mesh geometry={geoEar} position={[0.115, 0, 0]}>
             <meshStandardMaterial color="#fbcfe8" roughness={0.5} />
           </mesh>
 
@@ -487,14 +487,14 @@ function Employee3DComponent({
           <mesh geometry={geoUpperArm} position={[0, -0.1, 0.04]} rotation={[-0.45, 0, 0]} castShadow>
             <meshStandardMaterial color={spec.jacketColor || spec.shirtColor} roughness={0.4} />
           </mesh>
-          <mesh geometry={geoElbow} position={[0, -0.19, 0.07]} castShadow>
+          <mesh geometry={geoElbow} position={[0, -0.19, 0.07]}>
             <meshStandardMaterial color={spec.jacketColor || spec.shirtColor} roughness={0.4} />
           </mesh>
-          <mesh geometry={geoForearm} position={[0, -0.23, 0.14]} rotation={[-0.65, 0, 0]} castShadow>
+          <mesh geometry={geoForearm} position={[0, -0.23, 0.14]} rotation={[-0.65, 0, 0]}>
             <meshStandardMaterial color={spec.shirtColor} roughness={0.5} />
           </mesh>
           {/* Wrist / Hand over Keyboard */}
-          <mesh geometry={geoHand} position={[0, -0.29, 0.21]} castShadow>
+          <mesh geometry={geoHand} position={[0, -0.29, 0.21]}>
             <meshStandardMaterial color="#fed7aa" roughness={0.5} />
           </mesh>
         </group>
@@ -504,14 +504,14 @@ function Employee3DComponent({
           <mesh geometry={geoUpperArm} position={[0, -0.1, 0.04]} rotation={[-0.45, 0, 0]} castShadow>
             <meshStandardMaterial color={spec.jacketColor || spec.shirtColor} roughness={0.4} />
           </mesh>
-          <mesh geometry={geoElbow} position={[0, -0.19, 0.07]} castShadow>
+          <mesh geometry={geoElbow} position={[0, -0.19, 0.07]}>
             <meshStandardMaterial color={spec.jacketColor || spec.shirtColor} roughness={0.4} />
           </mesh>
-          <mesh geometry={geoForearm} position={[0, -0.23, 0.14]} rotation={[-0.65, 0, 0]} castShadow>
+          <mesh geometry={geoForearm} position={[0, -0.23, 0.14]} rotation={[-0.65, 0, 0]}>
             <meshStandardMaterial color={spec.shirtColor} roughness={0.5} />
           </mesh>
           {/* Wrist / Hand over Keyboard */}
-          <mesh geometry={geoHand} position={[0, -0.29, 0.21]} castShadow>
+          <mesh geometry={geoHand} position={[0, -0.29, 0.21]}>
             <meshStandardMaterial color="#fed7aa" roughness={0.5} />
           </mesh>
         </group>
@@ -531,7 +531,7 @@ function Employee3DComponent({
                 <meshStandardMaterial color={spec.pantsColor} roughness={0.5} />
               </mesh>
               {/* Knee Joint */}
-              <mesh geometry={geoKnee} position={[0, 0.28, 0]} castShadow>
+              <mesh geometry={geoKnee} position={[0, 0.28, 0]}>
                 <meshStandardMaterial color={spec.pantsColor} roughness={0.5} />
               </mesh>
             </group>
@@ -540,7 +540,7 @@ function Employee3DComponent({
               <mesh geometry={geoCalf} position={[0, -0.16, 0]} castShadow>
                 <meshStandardMaterial color={spec.pantsColor} roughness={0.5} />
               </mesh>
-              <mesh geometry={geoShoe} position={[0, -0.32, 0.03]} castShadow>
+              <mesh geometry={geoShoe} position={[0, -0.32, 0.03]}>
                 <meshStandardMaterial color="#0f172a" roughness={0.3} />
               </mesh>
             </group>
@@ -554,7 +554,7 @@ function Employee3DComponent({
                 <meshStandardMaterial color={spec.pantsColor} roughness={0.5} />
               </mesh>
               {/* Knee Joint */}
-              <mesh geometry={geoKnee} position={[0, 0.28, 0]} castShadow>
+              <mesh geometry={geoKnee} position={[0, 0.28, 0]}>
                 <meshStandardMaterial color={spec.pantsColor} roughness={0.5} />
               </mesh>
             </group>
@@ -563,7 +563,7 @@ function Employee3DComponent({
               <mesh geometry={geoCalf} position={[0, -0.16, 0]} castShadow>
                 <meshStandardMaterial color={spec.pantsColor} roughness={0.5} />
               </mesh>
-              <mesh geometry={geoShoe} position={[0, -0.32, 0.03]} castShadow>
+              <mesh geometry={geoShoe} position={[0, -0.32, 0.03]}>
                 <meshStandardMaterial color="#0f172a" roughness={0.3} />
               </mesh>
             </group>

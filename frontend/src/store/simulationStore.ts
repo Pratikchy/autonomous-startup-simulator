@@ -10,6 +10,10 @@ import type {
   Plans,
   Startup,
   StartupEvent,
+  ExecutionTraceEntry,
+  GeneratedApp,
+  GeneratedFileInfo,
+  GeneratedFileContent,
 } from "../types";
 
 interface SimState {
@@ -22,6 +26,10 @@ interface SimState {
   blueprint: Blueprint | null;
   plans: Plans | null;
   executionState: ExecutionState | null;
+  trace: ExecutionTraceEntry[];
+  generatedApp: GeneratedApp | null;
+  generatedFiles: GeneratedFileInfo[];
+  selectedFileContent: GeneratedFileContent | null;
   loading: boolean;
   error: string | null;
 
@@ -34,12 +42,20 @@ interface SimState {
   refresh: () => Promise<void>;
   loadBlueprint: () => Promise<void>;
   loadPlans: () => Promise<void>;
+  loadTrace: (agent?: string) => Promise<void>;
   loadExecutionState: () => Promise<void>;
   startExecution: () => Promise<void>;
   pauseExecution: () => Promise<void>;
   resumeExecution: () => Promise<void>;
   stepExecution: () => Promise<void>;
   resolveTaskBlocker: (taskId: number) => Promise<void>;
+  loadGeneratedApp: () => Promise<void>;
+  generateApp: () => Promise<void>;
+  loadGeneratedFiles: () => Promise<void>;
+  selectGeneratedFile: (path: string) => Promise<void>;
+  buildGeneratedApp: () => Promise<void>;
+  startPreview: () => Promise<void>;
+  stopPreview: () => Promise<void>;
   reset: () => void;
 }
 
@@ -53,6 +69,10 @@ export const useSim = create<SimState>((set, get) => ({
   blueprint: null,
   plans: null,
   executionState: null,
+  trace: [],
+  generatedApp: null,
+  generatedFiles: [],
+  selectedFileContent: null,
   loading: false,
   error: null,
 
@@ -70,7 +90,7 @@ export const useSim = create<SimState>((set, get) => ({
   },
 
   async load(id) {
-    const [startup, agents, tasks, messages, debates, events, plans] = await Promise.all([
+    const [startup, agents, tasks, messages, debates, events, plans, executionState, blueprint, trace, generatedApp] = await Promise.all([
       api.getStartup(id),
       api.agents(id),
       api.tasks(id),
@@ -78,9 +98,12 @@ export const useSim = create<SimState>((set, get) => ({
       api.debates(id),
       api.events(id),
       api.plans(id),
+      api.getExecutionState(id).catch(() => null),
+      api.blueprint(id).catch(() => null),
+      api.trace(id).catch(() => []),
+      api.getGeneratedApp(id).catch(() => null),
     ]);
-    set({ startup, agents, tasks, messages, debates, events, plans });
-    await get().loadExecutionState();
+    set({ startup, agents, tasks, messages, debates, events, plans, executionState, blueprint, trace, generatedApp });
   },
 
   async startSimulation(speed = 1.0) {
@@ -115,16 +138,16 @@ export const useSim = create<SimState>((set, get) => ({
   async refresh() {
     const s = get().startup;
     if (!s) return;
-    const [startup, agents, tasks, messages, debates, plans] = await Promise.all([
+    const [startup, agents, tasks, messages, debates, plans, executionState] = await Promise.all([
       api.getStartup(s.id),
       api.agents(s.id),
       api.tasks(s.id),
       api.messages(s.id),
       api.debates(s.id),
       api.plans(s.id),
+      api.getExecutionState(s.id).catch(() => get().executionState),
     ]);
-    set({ startup, agents, tasks, messages, debates, plans });
-    void get().loadExecutionState();
+    set({ startup, agents, tasks, messages, debates, plans, executionState });
   },
 
   async loadBlueprint() {
@@ -144,6 +167,16 @@ export const useSim = create<SimState>((set, get) => ({
       set({ plans: await api.plans(s.id) });
     } catch {
       /* plans not ready yet */
+    }
+  },
+
+  async loadTrace(agent?: string) {
+    const s = get().startup;
+    if (!s) return;
+    try {
+      set({ trace: await api.trace(s.id, agent) });
+    } catch {
+      /* trace not available */
     }
   },
 
@@ -196,6 +229,77 @@ export const useSim = create<SimState>((set, get) => ({
     void get().refresh();
   },
 
+  async loadGeneratedApp() {
+    const s = get().startup;
+    if (!s) return;
+    try {
+      const generatedApp = await api.getGeneratedApp(s.id);
+      set({ generatedApp });
+    } catch {
+      /* app not generated yet */
+    }
+  },
+
+  async generateApp() {
+    const s = get().startup;
+    if (!s) return;
+    const generatedApp = await api.generateApp(s.id);
+    set({ generatedApp });
+    await get().loadGeneratedFiles();
+  },
+
+  async loadGeneratedFiles() {
+    const s = get().startup;
+    if (!s) return;
+    try {
+      const generatedFiles = await api.listGeneratedFiles(s.id);
+      set({ generatedFiles });
+      if (generatedFiles.length > 0 && !get().selectedFileContent) {
+        // Automatically select src/App.tsx or package.json
+        const defaultFile = generatedFiles.find((f) => f.path === "src/App.tsx") ||
+                            generatedFiles.find((f) => !f.isDirectory);
+        if (defaultFile) {
+          void get().selectGeneratedFile(defaultFile.path);
+        }
+      }
+    } catch {
+      /* files not available */
+    }
+  },
+
+  async selectGeneratedFile(path: string) {
+    const s = get().startup;
+    if (!s) return;
+    try {
+      const selectedFileContent = await api.getGeneratedFileContent(s.id, path);
+      set({ selectedFileContent });
+    } catch {
+      /* could not read file */
+    }
+  },
+
+  async buildGeneratedApp() {
+    const s = get().startup;
+    if (!s) return;
+    const generatedApp = await api.buildGeneratedApp(s.id);
+    set({ generatedApp });
+    await get().loadGeneratedFiles();
+  },
+
+  async startPreview() {
+    const s = get().startup;
+    if (!s) return;
+    const generatedApp = await api.startPreview(s.id);
+    set({ generatedApp });
+  },
+
+  async stopPreview() {
+    const s = get().startup;
+    if (!s) return;
+    const generatedApp = await api.stopPreview(s.id);
+    set({ generatedApp });
+  },
+
   reset() {
     set({
       startup: null,
@@ -207,6 +311,10 @@ export const useSim = create<SimState>((set, get) => ({
       blueprint: null,
       plans: null,
       executionState: null,
+      trace: [],
+      generatedApp: null,
+      generatedFiles: [],
+      selectedFileContent: null,
       error: null,
     });
   },

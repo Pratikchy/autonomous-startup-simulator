@@ -162,7 +162,13 @@ public class StartupController {
      * genuine agent reasoning, messaging, tool calls, memory, decisions, replanning, and recovery.
      */
     @GetMapping("/{id}/trace")
-    public List<ExecutionTraceEntryDto> trace(@PathVariable Long id) {
+    public List<ExecutionTraceEntryDto> trace(
+            @PathVariable Long id,
+            @RequestParam(required = false) String agent) {
+        if (agent != null && !agent.isBlank()) {
+            return traceService.getTraceByAgent(id, agent);
+        }
         return traceService.getTrace(id);
     }
 }
+

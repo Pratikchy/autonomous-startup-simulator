@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, Suspense, memo } from "react";
+import { useRef, useState, useCallback, useEffect, Suspense, memo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Html } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
@@ -47,6 +47,27 @@ function CameraRig({
       camera.position.copy(config.pos);
       transitionTime.current = 0;
       onComplete();
+    }
+  });
+
+  return null;
+}
+
+/* ─── Shadow Map Frame Throttler (Eliminates redundant 60fps shadow depth recalculation during camera dragging) ─── */
+function ShadowMapOptimizer() {
+  const { gl } = useThree();
+  const frameCount = useRef(0);
+
+  useEffect(() => {
+    gl.shadowMap.autoUpdate = false;
+    gl.shadowMap.needsUpdate = true;
+  }, [gl]);
+
+  useFrame(() => {
+    frameCount.current += 1;
+    // Throttled refresh maintains crisp shadows while cutting 40+ shadow draw calls/sec during camera rotations
+    if (frameCount.current % 3 === 0) {
+      gl.shadowMap.needsUpdate = true;
     }
   });
 
@@ -143,6 +164,21 @@ function StartupOffice3DComponent({
   const handleRigComplete = useCallback(() => {
     setFocusedRoom(null);
   }, []);
+
+  const handleSelectDepartment = useCallback(
+    (dept: AgentType) => {
+      focusRoom(dept);
+      onSelectDepartment(dept);
+    },
+    [focusRoom, onSelectDepartment]
+  );
+
+  const handleOpenBoardroomSelect = useCallback(() => {
+    focusRoom("BOARDROOM");
+    onOpenBoardroom();
+  }, [focusRoom, onOpenBoardroom]);
+
+  const [perfMode, setPerfMode] = useState<"smooth" | "quality">("smooth");
 
   return (
     <div className="w-full h-full flex flex-col min-h-0 overflow-hidden select-none bg-slate-950">
@@ -259,8 +295,20 @@ function StartupOffice3DComponent({
             )}
           </div>
 
-          {/* Right Utility Group: Perf Stats & Zoom Controls */}
+          {/* Right Utility Group: Perf Stats, Camera Mode & Zoom Controls */}
           <div className="flex items-center gap-1 bg-slate-950/70 p-1 rounded-lg border border-slate-800 text-xs shrink-0">
+            <button
+              onClick={() => setPerfMode((m) => (m === "smooth" ? "quality" : "smooth"))}
+              className={`px-2 py-0.5 rounded text-[11px] font-mono transition flex items-center gap-1 ${
+                perfMode === "smooth"
+                  ? "bg-cyan-500/30 text-cyan-300 border border-cyan-500/50 font-bold"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              }`}
+              title="Toggle Smooth 60FPS Camera Mode vs High Quality"
+            >
+              {perfMode === "smooth" ? "🚀 60 FPS" : "🎨 Quality"}
+            </button>
+            <span className="w-[1px] h-3.5 bg-slate-800" />
             <button
               onClick={() => setShowPerf((v) => !v)}
               className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
@@ -294,8 +342,8 @@ function StartupOffice3DComponent({
       {/* ═══ Hard Bounded 3D Viewport Canvas Container (Layer 0) ═══ */}
       <div className="flex-1 relative min-h-0 overflow-hidden bg-slate-950">
         <Canvas
-          shadows
-          dpr={[1, 1.5]}
+          shadows={perfMode === "quality"}
+          dpr={perfMode === "smooth" ? 1 : [1, 1.25]}
           gl={{
             antialias: true,
             powerPreference: "high-performance",
@@ -314,6 +362,7 @@ function StartupOffice3DComponent({
           />
           <OrbitControls
             ref={controlsRef}
+            makeDefault
             enableDamping
             dampingFactor={0.08}
             minDistance={4}
@@ -323,17 +372,12 @@ function StartupOffice3DComponent({
             target={[0, 1.25, 0]}
           />
           <CameraRig focusedRoom={focusedRoom} onComplete={handleRigComplete} />
+          <ShadowMapOptimizer />
           <PerfStats visible={showPerf} />
           <Suspense fallback={null}>
             <OfficeScene
-              onSelectDepartment={(dept) => {
-                focusRoom(dept);
-                onSelectDepartment(dept);
-              }}
-              onOpenBoardroom={() => {
-                focusRoom("BOARDROOM");
-                onOpenBoardroom();
-              }}
+              onSelectDepartment={handleSelectDepartment}
+              onOpenBoardroom={handleOpenBoardroomSelect}
             />
           </Suspense>
         </Canvas>

@@ -1,19 +1,45 @@
-import { useState } from "react";
+import { useCallback } from "react";
+import { Routes, Route, useNavigate, useParams, Navigate } from "react-router-dom";
 import { useSim } from "./store/simulationStore";
 import { useEventStream } from "./hooks/useEventStream";
 import LandingPage from "./pages/LandingPage";
 import SimulatorPage from "./pages/SimulatorPage";
 
-export default function App() {
+/** Wrapper that owns the SSE connection while a startup is active. */
+function SimulatorPageWrapper() {
   const startup = useSim((s) => s.startup);
   const onEvent = useSim((s) => s.onEvent);
-  const [entered, setEntered] = useState(false);
+  const load = useSim((s) => s.load);
+  const { id } = useParams<{ id: string }>();
 
-  // One SSE connection for the whole app, active once a startup exists.
-  const { connected } = useEventStream(startup ? startup.id : null, onEvent);
-
-  if (!startup || !entered) {
-    return <LandingPage onReady={() => setEntered(true)} />;
+  const numericId = id && !isNaN(Number(id)) ? Number(id) : null;
+  if (numericId == null) {
+    return <Navigate to="/" replace />;
   }
-  return <SimulatorPage sseConnected={connected} />;
+  const activeId = startup?.id ?? numericId;
+
+  const handleReconnect = useCallback(() => {
+    return load(activeId);
+  }, [activeId, load]);
+
+  const { connected } = useEventStream(activeId, onEvent, handleReconnect);
+
+  return <SimulatorPage sseConnected={connected} startupId={numericId} />;
 }
+
+function LandingPageWrapper() {
+  const navigate = useNavigate();
+  return <LandingPage onReady={(id: number) => navigate(`/startups/${id}`)} />;
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPageWrapper />} />
+      <Route path="/startups/:id" element={<SimulatorPageWrapper />} />
+      {/* Catch-all: redirect unknown paths to landing */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+

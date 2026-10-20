@@ -1,6 +1,7 @@
 import { useSim } from "../../store/simulationStore";
 import { money } from "../../lib/theme";
-import type { ExecutionState, SimulationPhase } from "../../types";
+import type { SimulationPhase } from "../../types";
+import { isExecutionLifecycle } from "../../lib/lifecycle";
 
 function Meter({ label, value, hex }: { label: string; value: number; hex: string }) {
   return (
@@ -34,27 +35,13 @@ const PHASE_PROGRESS: Record<SimulationPhase, number> = {
   EXECUTION: 100,
 };
 
-// Execution build metrics are authoritative only once the execution phase has
-// produced a real signal; before that they are structurally 0 (no execution
-// tasks yet) and must not be shown as the startup's headline progress.
-function executionActive(ex: ExecutionState | null): boolean {
-  if (!ex) return false;
-  return (
-    ex.isRunning ||
-    ex.isCompleted ||
-    ex.overallProgress > 0 ||
-    ex.mvpProgress > 0 ||
-    (ex.tasks?.length ?? 0) > 0
-  );
-}
-
 export default function HealthSidebar() {
   const startup = useSim((s) => s.startup);
   const executionState = useSim((s) => s.executionState);
   if (!startup) return null;
   const h = startup.health;
 
-  const execActive = executionActive(executionState);
+  const execActive = isExecutionLifecycle(startup, executionState);
 
   // Overall progress: real execution build progress once execution is live,
   // otherwise the planning-pipeline completion for the phase actually reached.

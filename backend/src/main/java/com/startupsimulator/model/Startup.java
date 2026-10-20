@@ -109,6 +109,14 @@ public class Startup {
     private boolean simulationStarted = false;
     private boolean simulationCompleted = false;
 
+    /** Persisted simulation clock — survives backend restarts. */
+    @Column(name = "execution_day")
+    private int executionDay = 1;
+
+    /** True while the Phase-2F execution engine is actively advancing tasks. */
+    @Column(name = "execution_running")
+    private boolean executionRunning = false;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 

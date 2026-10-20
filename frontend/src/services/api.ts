@@ -9,6 +9,12 @@ import type {
   Startup,
   StartupEvent,
   ExecutionState,
+  ExecutionTraceEntry,
+  GeneratedApp,
+  GeneratedFileInfo,
+  GeneratedFileContent,
+  AppChangeRequest,
+  CoworkerChatMessage,
 } from "../types";
 
 // In dev, Vite proxies /api to the backend (see vite.config.ts), so a relative
@@ -36,6 +42,8 @@ export const api = {
       body: JSON.stringify({ idea, name: name || undefined }),
     }),
 
+  listStartups: () => req<Startup[]>("/startups"),
+
   getStartup: (id: number) => req<Startup>(`/startups/${id}`),
 
   simulate: (id: number, speed = 1.0) =>
@@ -59,6 +67,8 @@ export const api = {
   events: (id: number) => req<StartupEvent[]>(`/startups/${id}/events`),
   blueprint: (id: number) => req<Blueprint>(`/startups/${id}/blueprint`),
   plans: (id: number) => req<Plans>(`/startups/${id}/plans`),
+  trace: (id: number, agent?: string) =>
+    req<ExecutionTraceEntry[]>(`/startups/${id}/trace${agent ? `?agent=${encodeURIComponent(agent)}` : ""}`),
 
   // ---- Phase 2F: Autonomous Startup Execution ----
   startExecution: (id: number) =>
@@ -73,6 +83,37 @@ export const api = {
     req<ExecutionState>(`/startups/${id}/execution/tasks/${taskId}/resolve-blocker`, { method: "POST" }),
   getExecutionState: (id: number) =>
     req<ExecutionState>(`/startups/${id}/execution/state`),
+
+  // ---- Real App Generation in Isolated Workspace ----
+  getGeneratedApp: (id: number) =>
+    req<GeneratedApp>(`/startups/${id}/app`),
+  generateApp: (id: number) =>
+    req<GeneratedApp>(`/startups/${id}/app/generate`, { method: "POST" }),
+  listGeneratedFiles: (id: number) =>
+    req<GeneratedFileInfo[]>(`/startups/${id}/app/files`),
+  getGeneratedFileContent: (id: number, path: string) =>
+    req<GeneratedFileContent>(`/startups/${id}/app/files/content?path=${encodeURIComponent(path)}`),
+  buildGeneratedApp: (id: number) =>
+    req<GeneratedApp>(`/startups/${id}/app/build`, { method: "POST" }),
+  startPreview: (id: number) =>
+    req<GeneratedApp>(`/startups/${id}/app/preview/start`, { method: "POST" }),
+  stopPreview: (id: number) =>
+    req<GeneratedApp>(`/startups/${id}/app/preview/stop`, { method: "POST" }),
+
+  // ---- Coworker Chat & Controlled App Modifications ----
+  getCoworkerChat: (id: number) =>
+    req<CoworkerChatMessage[]>(`/startups/${id}/app/chat`),
+  sendCoworkerChatMessage: (id: number, message: string, preferredAgent?: string) =>
+    req<CoworkerChatMessage>(`/startups/${id}/app/chat`, {
+      method: "POST",
+      body: JSON.stringify({ message, preferredAgent }),
+    }),
+  getAppChangeRequests: (id: number) =>
+    req<AppChangeRequest[]>(`/startups/${id}/app/change-requests`),
+  approveAppChangeRequest: (id: number, requestId: number) =>
+    req<AppChangeRequest>(`/startups/${id}/app/change-requests/${requestId}/approve`, { method: "POST" }),
+  rejectAppChangeRequest: (id: number, requestId: number) =>
+    req<AppChangeRequest>(`/startups/${id}/app/change-requests/${requestId}/reject`, { method: "POST" }),
 };
 
 export const streamUrl = (id: number) => `${BASE}/startups/${id}/events/stream`;

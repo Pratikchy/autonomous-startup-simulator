@@ -20,13 +20,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ExecutionTraceService {
 
     private final ExecutionTraceRepository repository;
     private final ObjectMapper objectMapper;
 
-    private final Map<Long, AtomicInteger> sequenceCounters = new ConcurrentHashMap<>();
+    public ExecutionTraceService(ExecutionTraceRepository repository, ObjectMapper objectMapper) {
+        this.repository = repository;
+        this.objectMapper = objectMapper;
+    }
+
+    private Map<Long, AtomicInteger> sequenceCounters = new ConcurrentHashMap<>();
 
     private int nextSequenceNumber(Long startupId) {
         return sequenceCounters.computeIfAbsent(startupId, id -> {
@@ -263,6 +267,19 @@ public class ExecutionTraceService {
     @Transactional(readOnly = true)
     public List<ExecutionTraceEntryDto> getTrace(Long startupId) {
         return repository.findByStartupIdOrderBySequenceNumberAsc(startupId).stream()
+                .map(ExecutionTraceEntryDto::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExecutionTraceEntryDto> getTraceByAgent(Long startupId, String agent) {
+        if (agent == null || agent.isBlank() || "ALL".equalsIgnoreCase(agent)) {
+            return getTrace(startupId);
+        }
+        return repository.findByStartupIdOrderBySequenceNumberAsc(startupId).stream()
+                .filter(entry -> agent.equalsIgnoreCase(entry.getAgent())
+                        || agent.equalsIgnoreCase(entry.getSender())
+                        || agent.equalsIgnoreCase(entry.getRecipient()))
                 .map(ExecutionTraceEntryDto::from)
                 .toList();
     }

@@ -480,3 +480,90 @@ export interface Blueprint {
   executionPlanSection?: ExecutionPlan90Day;
 }
 
+export interface ExecutionTraceEntry {
+  id: number;
+  startupId: number;
+  traceId: string;
+  sequenceNumber: number;
+  timestamp: string;
+  type: string;
+  agent: string | null;
+  sender: string | null;
+  recipient: string | null;
+  action: string | null;
+  decision: string | null;
+  reason: string | null;
+  toolName: string | null;
+  toolArguments: string | null;
+  toolResult: string | null;
+  outcome: string | null;
+  payload: string | null;
+}
+
+export type GeneratedAppStatus = "UNGENERATED" | "GENERATING" | "GENERATED" | "BUILDING" | "READY" | "FAILED";
+export type GeneratedBuildStatus = "NOT_BUILT" | "BUILDING" | "SUCCESS" | "FAILED";
+
+export interface GeneratedApp {
+  id: number | null;
+  startupId: number;
+  appName: string | null;
+  template: string;
+  status: GeneratedAppStatus;
+  buildStatus: GeneratedBuildStatus;
+  buildOutput: string | null;
+  previewPort: number | null;
+  previewUrl: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface GeneratedFileInfo {
+  path: string;
+  name: string;
+  sizeBytes: number;
+  isDirectory: boolean;
+  fileType: string;
+}
+
+export interface GeneratedFileContent {
+  path: string;
+  name: string;
+  content: string;
+  sizeBytes: number;
+}
+
+export interface ProposedFileChange {
+  relativePath: string;
+  action: "CREATE" | "MODIFY" | "DELETE";
+  description: string;
+  content: string;
+}
+
+export type ChangeRequestStatus = "PLANNING" | "PROPOSED" | "APPROVED" | "APPLYING" | "SUCCEEDED" | "FAILED" | "REJECTED";
+
+export interface AppChangeRequest {
+  id: number;
+  startupId: number;
+  userPrompt: string;
+  agentType: AgentType;
+  agentName: string;
+  status: ChangeRequestStatus;
+  planSummary: string;
+  proposedChanges: ProposedFileChange[];
+  buildOutput: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CoworkerChatMessage {
+  id: number;
+  startupId: number;
+  role: "USER" | "ASSISTANT" | "SYSTEM";
+  agentType: AgentType | null;
+  agentName: string | null;
+  content: string;
+  changeRequestId: number | null;
+  changeRequest?: AppChangeRequest | null;
+  createdAt: string;
+}

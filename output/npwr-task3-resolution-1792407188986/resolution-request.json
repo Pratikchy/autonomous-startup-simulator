@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "path": "/api/startups/2/execution/tasks/3/resolve-blocker",
+  "attemptedAt": "2026-10-19T10:55:31.315056+00:00",
+  "preconditionIsPaused": true,
+  "preconditionIsRunning": false
+}

@@ -26,17 +26,90 @@ public class StartupContextService {
     private final RoadmapMilestoneRepository roadmapRepository;
 
     public StartupContext buildContext(Startup startup) {
-        return new StartupContext(startup);
+        StartupContext ctx = new StartupContext(startup);
+        if (startup != null && startup.getId() != null) {
+            Long startupId = startup.getId();
+            List<MvpFeature> features = featureRepository.findByStartupIdOrderByDisplayOrder(startupId);
+            for (MvpFeature f : features) {
+                ctx.addFeature(f);
+            }
+            List<RoadmapMilestone> milestones = roadmapRepository.findByStartupIdOrderByDisplayOrder(startupId);
+            for (RoadmapMilestone rm : milestones) {
+                ctx.addMilestone(rm);
+            }
+            if (startup.getRisks() != null && !startup.getRisks().isBlank()) {
+                for (String r : startup.getRisks().split("\n")) {
+                    ctx.addRisk(r);
+                }
+            }
+            technicalPlanRepository.findByStartupId(startupId).ifPresent(tp -> copyTechnicalPlan(tp, ctx.getTechnicalPlan()));
+            marketingPlanRepository.findByStartupId(startupId).ifPresent(mp -> copyMarketingPlan(mp, ctx.getMarketingPlan()));
+            budgetRepository.findByStartupId(startupId).ifPresent(b -> copyBudget(b, ctx.getBudget()));
+        }
+        return ctx;
     }
 
     @Transactional
     public void persist(StartupContext ctx) {
+        Long startupId = ctx.startupId();
+        if (ctx.getTechnicalPlan().getId() == null) {
+            technicalPlanRepository.findByStartupId(startupId)
+                    .ifPresent(existing -> ctx.getTechnicalPlan().setId(existing.getId()));
+        }
+        if (ctx.getMarketingPlan().getId() == null) {
+            marketingPlanRepository.findByStartupId(startupId)
+                    .ifPresent(existing -> ctx.getMarketingPlan().setId(existing.getId()));
+        }
+        if (ctx.getBudget().getId() == null) {
+            budgetRepository.findByStartupId(startupId)
+                    .ifPresent(existing -> ctx.getBudget().setId(existing.getId()));
+        }
         featureRepository.saveAll(ctx.getMvpFeatures());
         roadmapRepository.saveAll(ctx.getRoadmap());
         technicalPlanRepository.save(ctx.getTechnicalPlan());
         marketingPlanRepository.save(ctx.getMarketingPlan());
         budgetRepository.save(ctx.getBudget());
         ctx.getStartup().setRisks(String.join("\n", ctx.getRisks()));
+    }
+
+    private void copyTechnicalPlan(TechnicalPlan src, TechnicalPlan dest) {
+        dest.setId(src.getId());
+        dest.setArchitecture(src.getArchitecture());
+        dest.setTechStack(src.getTechStack());
+        dest.setTimeline(src.getTimeline());
+        dest.setTechnicalRisks(src.getTechnicalRisks());
+        dest.setEstimatedEngineeringMonths(src.getEstimatedEngineeringMonths());
+        dest.setAnalysisProvider(src.getAnalysisProvider());
+        dest.setAnalysisFailed(src.isAnalysisFailed());
+        dest.setAnalysisError(src.getAnalysisError());
+    }
+
+    private void copyMarketingPlan(MarketingPlan src, MarketingPlan dest) {
+        dest.setId(src.getId());
+        dest.setPositioning(src.getPositioning());
+        dest.setPricingStrategy(src.getPricingStrategy());
+        dest.setChannels(src.getChannels());
+        dest.setCompetitorAnalysis(src.getCompetitorAnalysis());
+        dest.setGoToMarket(src.getGoToMarket());
+        dest.setAnalysisProvider(src.getAnalysisProvider());
+        dest.setAnalysisFailed(src.isAnalysisFailed());
+        dest.setAnalysisError(src.getAnalysisError());
+    }
+
+    private void copyBudget(Budget src, Budget dest) {
+        dest.setId(src.getId());
+        dest.setDevelopmentCost(src.getDevelopmentCost());
+        dest.setInfrastructureCost(src.getInfrastructureCost());
+        dest.setMarketingBudget(src.getMarketingBudget());
+        dest.setOperatingCost(src.getOperatingCost());
+        dest.setStartingCapital(src.getStartingCapital());
+        dest.setMonthlyBurn(src.getMonthlyBurn());
+        dest.setProjectedMonthlyRevenue(src.getProjectedMonthlyRevenue());
+        dest.setRunwayMonths(src.getRunwayMonths());
+        dest.setBreakEvenAssumption(src.getBreakEvenAssumption());
+        dest.setAnalysisProvider(src.getAnalysisProvider());
+        dest.setAnalysisFailed(src.isAnalysisFailed());
+        dest.setAnalysisError(src.getAnalysisError());
     }
 
     /** Persist just the parts that change when the boardroom trims scope. */

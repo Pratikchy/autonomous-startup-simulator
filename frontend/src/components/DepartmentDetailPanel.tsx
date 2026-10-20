@@ -6,9 +6,11 @@ import { useState } from "react";
 export default function DepartmentDetailPanel({
   type,
   onClose,
+  onOpenWorkHistory,
 }: {
   type: AgentType;
   onClose: () => void;
+  onOpenWorkHistory?: (type: AgentType) => void;
 }) {
   const agents = useSim((s) => s.agents);
   const tasks = useSim((s) => s.tasks);
@@ -100,6 +102,15 @@ export default function DepartmentDetailPanel({
         </div>
         {agent && (
           <p className="text-[12px] text-slate-300 mt-2">{agent.mandate}</p>
+        )}
+        {onOpenWorkHistory && (
+          <button
+            onClick={() => onOpenWorkHistory(type)}
+            className="mt-3 w-full py-1.5 px-3 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/15 flex items-center justify-center gap-1.5 transition shadow-sm"
+          >
+            <span>📜</span>
+            <span>View {t.label} Work History</span>
+          </button>
         )}
       </div>
 

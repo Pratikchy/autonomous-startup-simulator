@@ -74,7 +74,7 @@ export const Desk3D = memo(function Desk3D({
       )}
 
       {/* Keyboard with Visible Key Rows */}
-      <group position={[0, 0.755, 0.18]} castShadow>
+      <group position={[0, 0.755, 0.18]}>
         <mesh geometry={geoKeyboard}>
           <meshStandardMaterial color="#0f172a" roughness={0.4} />
         </mesh>
@@ -87,12 +87,12 @@ export const Desk3D = memo(function Desk3D({
       <mesh geometry={geoMousepad} position={[0.32, 0.751, 0.18]}>
         <meshStandardMaterial color="#0f172a" roughness={0.8} />
       </mesh>
-      <mesh geometry={geoMouse} position={[0.32, 0.76, 0.18]} castShadow>
+      <mesh geometry={geoMouse} position={[0.32, 0.76, 0.18]}>
         <meshStandardMaterial color="#334155" roughness={0.3} metalness={0.5} />
       </mesh>
 
       {/* Coffee Cup */}
-      <group position={[-0.48, 0.78, 0.15]} castShadow>
+      <group position={[-0.48, 0.78, 0.15]}>
         <mesh geometry={geoCup}>
           <meshStandardMaterial color="#f8fafc" roughness={0.2} />
         </mesh>
@@ -373,13 +373,13 @@ export const Plant3D = memo(function Plant3D({
         <meshStandardMaterial color="#78350f" roughness={0.6} />
       </mesh>
       {/* Leaves Cluster (Shared Dodecahedron Geometries) */}
-      <mesh geometry={geoLeaves1} position={[0, 0.82, 0]} scale={[0.38, 0.48, 0.38]} castShadow>
+      <mesh geometry={geoLeaves1} position={[0, 0.82, 0]} scale={[0.38, 0.48, 0.38]}>
         <meshStandardMaterial color="#15803d" roughness={0.5} />
       </mesh>
-      <mesh geometry={geoLeaves2} position={[0.12, 0.72, 0.12]} scale={[0.28, 0.38, 0.28]} castShadow>
+      <mesh geometry={geoLeaves2} position={[0.12, 0.72, 0.12]} scale={[0.28, 0.38, 0.28]}>
         <meshStandardMaterial color="#15803d" roughness={0.5} />
       </mesh>
-      <mesh geometry={geoLeaves3} position={[-0.12, 0.88, -0.06]} scale={[0.3, 0.4, 0.3]} castShadow>
+      <mesh geometry={geoLeaves3} position={[-0.12, 0.88, -0.06]} scale={[0.3, 0.4, 0.3]}>
         <meshStandardMaterial color="#15803d" roughness={0.5} />
       </mesh>
     </group>

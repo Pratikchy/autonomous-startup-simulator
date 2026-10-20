@@ -1,0 +1,265 @@
+{
+  "startupId": 2,
+  "phase": "EXECUTION",
+  "day": 13,
+  "week": 2,
+  "isRunning": false,
+  "isPaused": true,
+  "isCompleted": false,
+  "overallProgress": 35.9,
+  "mvpProgress": 16.8,
+  "technicalProgress": 16.8,
+  "marketReadiness": 66.7,
+  "financialHealth": 97.2,
+  "budgetRemaining": 58310.0,
+  "runwayMonths": 15.0,
+  "activeBlockerCount": 1,
+  "departmentProgress": {
+    "MARKETING": 66.66666666666667,
+    "CEO": 50.0,
+    "DEVELOPMENT": 16.833333333333332,
+    "FINANCE": 66.66666666666667
+  },
+  "tasks": [
+    {
+      "id": 1,
+      "startupId": 2,
+      "department": "CEO",
+      "assignedAgent": "Alex Vance (CEO)",
+      "title": "Strategic Alignment & Execution Kickoff",
+      "description": "Define strategic roadmap milestones based on vision: NPWR helps skincare enthusiasts aged 18-35 who are tech-savvy and seek personalized skincare solutions. get personalized skincare recommendations instantly by simply scanning your products with our app. We ship a focused MVP and grow through a freemium, word-of-mouth motion.",
+      "priority": "HIGH",
+      "status": "COMPLETED",
+      "progress": 100.0,
+      "dependencies": [],
+      "estimatedDays": 3,
+      "actualDays": 3,
+      "blockerReason": null
+    },
+    {
+      "id": 2,
+      "startupId": 2,
+      "department": "DEVELOPMENT",
+      "assignedAgent": "Dev Lead",
+      "title": "Repo & Environment Architecture Setup",
+      "description": "Initialize version control, CI/CD pipeline, and core tech stack: React Native, Node.js, Express, MongoDB, TensorFlow",
+      "priority": "HIGH",
+      "status": "COMPLETED",
+      "progress": 100.0,
+      "dependencies": [
+        1
+      ],
+      "estimatedDays": 4,
+      "actualDays": 4,
+      "blockerReason": null
+    },
+    {
+      "id": 3,
+      "startupId": 2,
+      "department": "DEVELOPMENT",
+      "assignedAgent": "Backend Eng",
+      "title": "Core Database & API Infrastructure",
+      "description": "Implement foundational backend models, API routes, and integration layer: The MVP will utilize a client-server architecture where the mobile app communicates with a backend server for product database access and AI processing. The backend will handle image recognition and recommendation algorithms.",
+      "priority": "HIGH",
+      "status": "BLOCKED",
+      "progress": 1.0,
+      "dependencies": [
+        2
+      ],
+      "estimatedDays": 6,
+      "actualDays": 0,
+      "blockerReason": "DEVELOPMENT execution blocked on Day 8: Dependencies delayed due to technical risk review."
+    },
+    {
+      "id": 4,
+      "startupId": 2,
+      "department": "DEVELOPMENT",
+      "assignedAgent": "Dev Lead",
+      "title": "Build MVP: Basic Routine Recommendations",
+      "description": "Provides users with basic skincare routine suggestions based on scanned product data and limited user inputs.",
+      "priority": "HIGH",
+      "status": "PENDING",
+      "progress": 0.0,
+      "dependencies": [
+        3
+      ],
+      "estimatedDays": 6,
+      "actualDays": 0,
+      "blockerReason": null
+    },
+    {
+      "id": 5,
+      "startupId": 2,
+      "department": "DEVELOPMENT",
+      "assignedAgent": "Dev Lead",
+      "title": "Build MVP: User Profile Setup",
+      "description": "Enables users to input basic skin type and concerns to tailor recommendations.",
+      "priority": "HIGH",
+      "status": "PENDING",
+      "progress": 0.0,
+      "dependencies": [
+        4
+      ],
+      "estimatedDays": 4,
+      "actualDays": 0,
+      "blockerReason": null
+    },
+    {
+      "id": 6,
+      "startupId": 2,
+      "department": "DEVELOPMENT",
+      "assignedAgent": "Dev Lead",
+      "title": "Build MVP: Product Database",
+      "description": "A foundational database of skincare products and ingredients to support scanning and recommendations.",
+      "priority": "HIGH",
+      "status": "PENDING",
+      "progress": 0.0,
+      "dependencies": [
+        5
+      ],
+      "estimatedDays": 6,
+      "actualDays": 0,
+      "blockerReason": null
+    },
+    {
+      "id": 7,
+      "startupId": 2,
+      "department": "DEVELOPMENT",
+      "assignedAgent": "Backend Eng",
+      "title": "QA, Performance & Security Audit",
+      "description": "Execute integration testing, security hardening, and load testing prior to launch.",
+      "priority": "MEDIUM",
+      "status": "PENDING",
+      "progress": 0.0,
+      "dependencies": [
+        6
+      ],
+      "estimatedDays": 4,
+      "actualDays": 0,
+      "blockerReason": null
+    },
+    {
+      "id": 8,
+      "startupId": 2,
+      "department": "MARKETING",
+      "assignedAgent": "Marketing Lead",
+      "title": "Brand Identity & Messaging Framework",
+      "description": "Establish core brand guidelines, value proposition messaging, and persona positioning: NPWR empowers skincare enthusiasts to effortlessly navigate their skincare journey by providing instant, personalized recommendations through AI technology.",
+      "priority": "MEDIUM",
+      "status": "COMPLETED",
+      "progress": 100.0,
+      "dependencies": [
+        1
+      ],
+      "estimatedDays": 4,
+      "actualDays": 4,
+      "blockerReason": null
+    },
+    {
+      "id": 9,
+      "startupId": 2,
+      "department": "MARKETING",
+      "assignedAgent": "Growth Lead",
+      "title": "Landing Page & Conversion Funnel",
+      "description": "Design and deploy responsive product landing page with email capture and CTA analytics.",
+      "priority": "HIGH",
+      "status": "COMPLETED",
+      "progress": 100.0,
+      "dependencies": [
+        8
+      ],
+      "estimatedDays": 5,
+      "actualDays": 5,
+      "blockerReason": null
+    },
+    {
+      "id": 10,
+      "startupId": 2,
+      "department": "MARKETING",
+      "assignedAgent": "Growth Lead",
+      "title": "Growth Channels & Launch Campaign",
+      "description": "Set up customer acquisition channels, social proof, and launch strategy: social media marketing, influencer partnerships, skincare community forums",
+      "priority": "HIGH",
+      "status": "PENDING",
+      "progress": 0.0,
+      "dependencies": [
+        9,
+        7
+      ],
+      "estimatedDays": 7,
+      "actualDays": 0,
+      "blockerReason": null
+    },
+    {
+      "id": 11,
+      "startupId": 2,
+      "department": "FINANCE",
+      "assignedAgent": "Finance Dir",
+      "title": "Capital Allocation & Banking Setup",
+      "description": "Set up financial accounts, budget allocation controls, and initial treasury management.",
+      "priority": "HIGH",
+      "status": "COMPLETED",
+      "progress": 100.0,
+      "dependencies": [
+        1
+      ],
+      "estimatedDays": 3,
+      "actualDays": 3,
+      "blockerReason": null
+    },
+    {
+      "id": 12,
+      "startupId": 2,
+      "department": "FINANCE",
+      "assignedAgent": "Controller",
+      "title": "Pricing Model & Unit Economics Audit",
+      "description": "Finalize pricing tiers, calculate customer acquisition cost (CAC) & lifetime value (LTV) assumptions: Adopt a freemium model, offering basic scanning and routine suggestions for free, while charging for premium features such as advanced AI analysis and personalized consultations.",
+      "priority": "MEDIUM",
+      "status": "COMPLETED",
+      "progress": 100.0,
+      "dependencies": [
+        11,
+        8
+      ],
+      "estimatedDays": 5,
+      "actualDays": 5,
+      "blockerReason": null
+    },
+    {
+      "id": 13,
+      "startupId": 2,
+      "department": "FINANCE",
+      "assignedAgent": "Controller",
+      "title": "Burn Rate & Cashflow Financial Controls",
+      "description": "Establish monthly operating burn monitoring, runway alerts, and financial report dashboard.",
+      "priority": "HIGH",
+      "status": "PENDING",
+      "progress": 0.0,
+      "dependencies": [
+        12,
+        10
+      ],
+      "estimatedDays": 6,
+      "actualDays": 0,
+      "blockerReason": null
+    },
+    {
+      "id": 14,
+      "startupId": 2,
+      "department": "CEO",
+      "assignedAgent": "Alex Vance (CEO)",
+      "title": "Product-Market Fit & Milestone Review",
+      "description": "Review MVP launch results, unit economics, and approve next stage growth expansion.",
+      "priority": "HIGH",
+      "status": "PENDING",
+      "progress": 0.0,
+      "dependencies": [
+        10,
+        13
+      ],
+      "estimatedDays": 4,
+      "actualDays": 0,
+      "blockerReason": null
+    }
+  ]
+}

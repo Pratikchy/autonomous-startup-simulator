@@ -1,4 +1,5 @@
 import { useMemo, memo } from "react";
+import * as THREE from "three";
 import { useSim } from "../../store/simulationStore";
 import type { AgentState, AgentType } from "../../types";
 import { EMPLOYEES } from "./officeLayout";
@@ -12,6 +13,41 @@ import { Plant3D } from "./OfficeFurniture3D";
 import OrchestratorCore3D from "./OrchestratorCore3D";
 import CommunicationSignal3D, { type ActiveSignal } from "./CommunicationSignal3D";
 import DepartmentStatusBadge3D from "./DepartmentStatusBadge3D";
+
+/* ═══════════════════════════════════════════════════════════════════
+   Pre-allocated Shared Materials for Office Partition System
+   ═══════════════════════════════════════════════════════════════════ */
+const matGlassClear = new THREE.MeshStandardMaterial({
+  color: "#e0f2fe",
+  transparent: true,
+  opacity: 0.14,
+  roughness: 0.04,
+  metalness: 0.1,
+});
+
+const matDarkMetalFrame = new THREE.MeshStandardMaterial({
+  color: "#1e293b",
+  roughness: 0.3,
+  metalness: 0.8,
+});
+
+const matSteelHandle = new THREE.MeshStandardMaterial({
+  color: "#94a3b8",
+  roughness: 0.2,
+  metalness: 0.9,
+});
+
+const matColumnShaft = new THREE.MeshStandardMaterial({
+  color: "#64748b",
+  roughness: 0.3,
+  metalness: 0.6,
+});
+
+const matColumnMolding = new THREE.MeshStandardMaterial({
+  color: "#475569",
+  roughness: 0.3,
+  metalness: 0.5,
+});
 
 /* ═══════════════════════════════════════════════════════════════════
    Glass Partition Wall with Dark Metal Frame, Door Handles & Frosted Accent
@@ -35,67 +71,46 @@ const GlassWall = memo(function GlassWall({
   return (
     <group position={position} rotation={rotation}>
       {/* Left glass panel — Crystal Clear */}
-      <mesh position={[-(halfDoor + panelW / 2), height / 2, 0]}>
+      <mesh position={[-(halfDoor + panelW / 2), height / 2, 0]} material={matGlassClear}>
         <boxGeometry args={[panelW, height - 0.06, 0.02]} />
-        <meshStandardMaterial
-          color="#e0f2fe"
-          transparent
-          opacity={0.14}
-          roughness={0.04}
-          metalness={0.1}
-        />
       </mesh>
 
       {/* Right glass panel — Crystal Clear */}
-      <mesh position={[(halfDoor + panelW / 2), height / 2, 0]}>
+      <mesh position={[(halfDoor + panelW / 2), height / 2, 0]} material={matGlassClear}>
         <boxGeometry args={[panelW, height - 0.06, 0.02]} />
-        <meshStandardMaterial
-          color="#e0f2fe"
-          transparent
-          opacity={0.14}
-          roughness={0.04}
-          metalness={0.1}
-        />
       </mesh>
 
       {/* Top horizontal frame beam */}
-      <mesh position={[0, height, 0]} castShadow>
+      <mesh position={[0, height, 0]} material={matDarkMetalFrame} castShadow>
         <boxGeometry args={[width + 0.02, 0.04, 0.035]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.8} />
       </mesh>
 
       {/* Bottom frame rail */}
-      <mesh position={[0, 0.015, 0]}>
+      <mesh position={[0, 0.015, 0]} material={matDarkMetalFrame}>
         <boxGeometry args={[width + 0.02, 0.03, 0.035]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.8} />
       </mesh>
 
       {/* Door header beam */}
-      <mesh position={[0, height - 0.02, 0]} castShadow>
+      <mesh position={[0, height - 0.02, 0]} material={matDarkMetalFrame} castShadow>
         <boxGeometry args={[doorWidth + 0.04, 0.04, 0.035]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.8} />
       </mesh>
 
       {/* Door Frame Posts & Handle */}
-      <mesh position={[-halfDoor, height / 2, 0]} castShadow>
+      <mesh position={[-halfDoor, height / 2, 0]} material={matDarkMetalFrame} castShadow>
         <boxGeometry args={[0.03, height, 0.035]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.8} />
       </mesh>
-      <mesh position={[halfDoor, height / 2, 0]} castShadow>
+      <mesh position={[halfDoor, height / 2, 0]} material={matDarkMetalFrame} castShadow>
         <boxGeometry args={[0.03, height, 0.035]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.8} />
       </mesh>
       {/* Sleek Stainless Door Handle */}
-      <mesh position={[halfDoor - 0.05, 1.0, 0.025]} castShadow>
+      <mesh position={[halfDoor - 0.05, 1.0, 0.025]} material={matSteelHandle}>
         <boxGeometry args={[0.018, 0.2, 0.035]} />
-        <meshStandardMaterial color="#94a3b8" roughness={0.2} metalness={0.9} />
       </mesh>
 
       {/* Outer vertical mullion posts */}
       {[-width / 2, width / 2].map((x, i) => (
-        <mesh key={i} position={[x, height / 2, 0]} castShadow>
+        <mesh key={i} position={[x, height / 2, 0]} material={matDarkMetalFrame} castShadow>
           <boxGeometry args={[0.035, height, 0.035]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.8} />
         </mesh>
       ))}
     </group>
@@ -109,19 +124,16 @@ const ArchColumn = memo(function ArchColumn({ position }: { position: [number, n
   return (
     <group position={position}>
       {/* Column shaft */}
-      <mesh position={[0, 1.15, 0]} castShadow>
+      <mesh position={[0, 1.15, 0]} material={matColumnShaft} castShadow>
         <boxGeometry args={[0.16, 2.3, 0.16]} />
-        <meshStandardMaterial color="#64748b" roughness={0.3} metalness={0.6} />
       </mesh>
       {/* Column base molding */}
-      <mesh position={[0, 0.035, 0]} castShadow>
+      <mesh position={[0, 0.035, 0]} material={matColumnMolding}>
         <boxGeometry args={[0.22, 0.07, 0.22]} />
-        <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.5} />
       </mesh>
       {/* Column capital */}
-      <mesh position={[0, 2.28, 0]}>
+      <mesh position={[0, 2.28, 0]} material={matColumnMolding}>
         <boxGeometry args={[0.2, 0.04, 0.2]} />
-        <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.5} />
       </mesh>
     </group>
   );
@@ -421,10 +433,8 @@ function OfficeSceneComponent({
       {/* Warm interior fill — reduced */}
       <directionalLight position={[0, 10, -16]} intensity={0.16} color="#efe8dc" />
 
-      {/* Overhead fill point lights — dimmer, warmer */}
-      <pointLight position={[0, 5, 0]} color="#fff6ea" intensity={0.55} distance={18} />
-      <pointLight position={[-5, 4, -3]} color="#f2eadd" intensity={0.22} distance={10} />
-      <pointLight position={[5, 4, 3]} color="#f2eadd" intensity={0.22} distance={10} />
+      {/* Single consolidated overhead fill point light */}
+      <pointLight position={[0, 6, 0]} color="#fff6ea" intensity={0.65} distance={22} />
 
       {/* ═══════════════════════════════════════════════════════════
           2. ENVIRONMENT BACKDROP
