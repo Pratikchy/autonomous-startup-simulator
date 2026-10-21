@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+**/node_modules
+**/dist
+**/target
+backend/workspaces
+backend/data
+frontend/tsconfig.tsbuildinfo
+.DS_Store
+.vscode
+.idea
