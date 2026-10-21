@@ -19,7 +19,7 @@ import type {
 
 // In dev, Vite proxies /api to the backend (see vite.config.ts), so a relative
 // base works both in dev and when the SPA is served behind the same origin.
-const BASE = "/api";
+const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "/api";
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
