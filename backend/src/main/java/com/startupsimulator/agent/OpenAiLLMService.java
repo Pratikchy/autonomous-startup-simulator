@@ -137,10 +137,25 @@ public class OpenAiLLMService implements LLMService {
             throw e;
         } catch (Exception e) {
             long latency = System.currentTimeMillis() - started;
-            // Never log the key or the full prompt; message class + latency only.
-            log.warn("LLM call failed (provider=openai, model={}, latencyMs={}): {}",
-                    props.getOpenai().getModel(), latency, e.getClass().getSimpleName());
-            throw new CeoAnalysisException("OpenAI request failed: " + e.getClass().getSimpleName(), e);
+            // Never log the key or the full prompt; capture exception type, message, and HTTP status where available.
+            String exceptionType = e.getClass().getSimpleName();
+            String exceptionMessage = e.getMessage() != null ? e.getMessage() : "";
+
+            // Extract HTTP status code if available from Spring's HTTP exceptions
+            String httpStatus = "";
+            if (e instanceof org.springframework.web.client.HttpStatusCodeException) {
+                org.springframework.web.client.HttpStatusCodeException httpEx =
+                    (org.springframework.web.client.HttpStatusCodeException) e;
+                httpStatus = ", httpStatus=" + httpEx.getStatusCode().value();
+            }
+
+            // Build safe stack trace: top frames only, no exception messages
+            String stackInfo = buildSafeStackTrace(e);
+
+            log.warn("LLM call failed (provider=openai, model={}, latencyMs={}{}): {} - {}{}",
+                    props.getOpenai().getModel(), latency, httpStatus, exceptionType,
+                    sanitizeErrorMessage(exceptionMessage), stackInfo);
+            throw new CeoAnalysisException("OpenAI request failed: " + exceptionType, e);
         }
     }
 
@@ -238,6 +253,47 @@ public class OpenAiLLMService implements LLMService {
 
     private static String safeKey(String key) {
         return key == null ? "" : key;
+    }
+
+    /**
+     * Sanitizes error messages to prevent accidental logging of API keys or sensitive data.
+     * Removes bearer tokens, OpenAI API keys, and truncates long messages.
+     */
+    private static String sanitizeErrorMessage(String message) {
+        if (message == null || message.isEmpty()) {
+            return "(no message)";
+        }
+        // Remove bearer tokens that might appear in error messages
+        String sanitized = message.replaceAll("Bearer [A-Za-z0-9_-]+", "Bearer [REDACTED]");
+        // Remove OpenAI API keys (sk-proj-, sk-*, etc.)
+        sanitized = sanitized.replaceAll("sk-[a-zA-Z0-9_-]+", "sk-[REDACTED]");
+        // Truncate very long messages
+        if (sanitized.length() > 500) {
+            return sanitized.substring(0, 497) + "...";
+        }
+        return sanitized;
+    }
+
+    /**
+     * Builds a safe stack trace summary containing only stack frame locations (class, method, file, line).
+     * Does NOT include exception messages, cause messages, or any runtime data that could contain secrets.
+     * Limits to top 5 frames to keep logs concise while preserving diagnostic value.
+     */
+    private static String buildSafeStackTrace(Exception e) {
+        StackTraceElement[] trace = e.getStackTrace();
+        if (trace == null || trace.length == 0) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        int limit = Math.min(5, trace.length);
+        for (int i = 0; i < limit; i++) {
+            sb.append("\n  at ").append(trace[i].toString());
+        }
+        if (trace.length > limit) {
+            sb.append("\n  ... ").append(trace.length - limit).append(" more");
+        }
+        return sb.toString();
     }
 
     @Override

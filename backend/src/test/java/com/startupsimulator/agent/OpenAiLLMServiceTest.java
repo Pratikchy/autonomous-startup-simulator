@@ -315,4 +315,52 @@ class OpenAiLLMServiceTest {
         assertThat(thrown.getMessage()).contains("finish_reason=stop");
         mockServer.verify();
     }
+
+    @Test
+    @DisplayName("Logging does not expose secrets from exception messages but includes stack frames")
+    void loggingDoesNotExposeSecretsButIncludesStackFrames() {
+        // Capture log output
+        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger)
+                org.slf4j.LoggerFactory.getLogger(OpenAiLLMService.class);
+        ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> listAppender =
+                new ch.qos.logback.core.read.ListAppender<>();
+        listAppender.start();
+        logger.addAppender(listAppender);
+
+        // Simulate a 401 with a response body containing a secret API key
+        mockServer.expect(requestTo("https://api.openai.com/v1/chat/completions"))
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED)
+                        .body("{\"error\":{\"message\":\"Invalid API key: sk-proj-SECRET123XYZ\",\"type\":\"invalid_request_error\"}}")
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        try {
+            newService().generate("system", "user");
+        } catch (CeoAnalysisException e) {
+            // Expected
+        }
+
+        // Verify log output
+        assertThat(listAppender.list).hasSize(1);
+        String logMessage = listAppender.list.get(0).getFormattedMessage();
+
+        // Secret from response body must NOT appear in logs
+        assertThat(logMessage).doesNotContain("sk-proj-SECRET123XYZ");
+        assertThat(logMessage).doesNotContain("SECRET123XYZ");
+
+        // Diagnostic information MUST be present
+        assertThat(logMessage).contains("LLM call failed");
+        assertThat(logMessage).contains("httpStatus=401");
+        assertThat(logMessage).contains("HttpClientErrorException");
+
+        // Sanitized API key placeholder MUST be present
+        assertThat(logMessage).contains("sk-[REDACTED]");
+
+        // Stack trace frames MUST be present (verify at least one application or Spring frame)
+        assertThat(logMessage).containsAnyOf(
+                "at com.startupsimulator.agent.OpenAiLLMService",
+                "at org.springframework.web.client");
+
+        logger.detachAppender(listAppender);
+        mockServer.verify();
+    }
 }

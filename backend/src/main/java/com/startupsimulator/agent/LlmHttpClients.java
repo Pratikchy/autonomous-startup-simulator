@@ -3,6 +3,8 @@ package com.startupsimulator.agent;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
+import java.time.Duration;
+
 /**
  * Builds a timeout-bounded {@link ClientHttpRequestFactory} for the real LLM
  * providers (OpenAI, Gemini, JustDoWork).
@@ -18,6 +20,11 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
  * <p>The timeout value comes from {@code LlmProperties.requestTimeoutSeconds};
  * this helper only converts it overflow-safely and guards against a
  * non-positive (misconfigured) value.
+ *
+ * <p>Uses {@link Duration}-based timeout methods introduced in Spring Framework
+ * 6.1 for compatibility with Spring Boot 3.5+ and Spring Framework 6.2+. The
+ * legacy millisecond-based methods can cause {@code IllegalArgumentException} in
+ * certain edge cases with modern RestClient implementations.
  */
 public final class LlmHttpClients {
 
@@ -50,12 +57,16 @@ public final class LlmHttpClients {
      * A simple blocking request factory with both connect and read timeouts set
      * to the resolved value, so neither connection establishment nor response
      * read can block without bound.
+     *
+     * <p>Uses Duration-based timeout methods (Spring Framework 6.1+) for
+     * compatibility with Spring Boot 3.5+ and Spring Framework 6.2+.
      */
     static ClientHttpRequestFactory timedRequestFactory(int timeoutSeconds) {
         int ms = resolveTimeoutMillis(timeoutSeconds);
+        Duration timeout = Duration.ofMillis(ms);
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(ms);
-        factory.setReadTimeout(ms);
+        factory.setConnectTimeout(timeout);
+        factory.setReadTimeout(timeout);
         return factory;
     }
 }
