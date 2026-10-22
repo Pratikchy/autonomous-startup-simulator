@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/startups/:id/app/preview",
+      "destination": "https://autonomous-startup-simulator.onrender.com/api/startups/:id/app/preview"
+    },
+    {
+      "source": "/api/startups/:id/app/preview/:path*",
+      "destination": "https://autonomous-startup-simulator.onrender.com/api/startups/:id/app/preview/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://autonomous-startup-simulator.onrender.com/api/:path*"
     },
