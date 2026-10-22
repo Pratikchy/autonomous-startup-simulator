@@ -171,20 +171,34 @@ class GeneratedAppControllerTest {
         GeneratedApp mockApp = new GeneratedApp();
         mockApp.setStartupId(startupId);
         mockApp.setPreviewPort(5174);
-        mockApp.setPreviewUrl("http://localhost:5174");
+        mockApp.setPreviewUrl("/api/startups/2/app/preview/");
 
         when(previewService.startPreview(startupId)).thenReturn(mockApp);
         when(previewService.stopPreview(startupId)).thenReturn(mockApp);
 
         mockMvc.perform(post("/api/startups/2/app/preview/start"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.previewUrl").value("http://localhost:5174"));
+                .andExpect(jsonPath("$.previewUrl").value("/api/startups/2/app/preview/"));
 
         mockMvc.perform(post("/api/startups/2/app/preview/stop"))
                 .andExpect(status().isOk());
 
         verify(previewService, times(1)).startPreview(eq(2L));
         verify(previewService, times(1)).stopPreview(eq(2L));
+    }
+
+    @Test
+    @DisplayName("GET /api/startups/{id}/app/preview/** delegates to previewService.proxyRequest")
+    void testPreviewProxyRouting() throws Exception {
+        Long startupId = 2L;
+
+        mockMvc.perform(get("/api/startups/2/app/preview/"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/startups/2/app/preview/assets/index.js"))
+                .andExpect(status().isOk());
+
+        verify(previewService, times(2)).proxyRequest(eq(startupId), any(), any());
     }
 
     @Test

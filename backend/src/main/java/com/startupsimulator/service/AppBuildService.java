@@ -91,9 +91,9 @@ public class AppBuildService {
 
             List<String> command;
             if (Files.exists(viteBinary)) {
-                command = List.of("node", viteBinary.toString(), "build");
+                command = List.of("node", viteBinary.toString(), "build", "--base", "./");
             } else {
-                command = List.of("npm", "run", "build");
+                command = List.of("npm", "run", "build", "--", "--base", "./");
             }
 
             outputLog.append("[exec] ").append(String.join(" ", command)).append("\n\n");

@@ -19,6 +19,8 @@ import com.startupsimulator.dto.request.CoworkerChatRequestDto;
 import com.startupsimulator.dto.response.AppChangeRequestDto;
 import com.startupsimulator.dto.response.CoworkerChatMessageDto;
 import com.startupsimulator.service.CoworkerChatService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -90,6 +92,14 @@ public class GeneratedAppController {
     public ResponseEntity<GeneratedAppDto> stopPreview(@PathVariable Long id) {
         GeneratedApp app = previewService.stopPreview(id);
         return ResponseEntity.ok(GeneratedAppDto.fromEntity(app));
+    }
+
+    @RequestMapping(value = {"/preview", "/preview/", "/preview/**"}, method = {RequestMethod.GET, RequestMethod.HEAD})
+    public void proxyPreview(
+            @PathVariable Long id,
+            HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+        previewService.proxyRequest(id, request, response);
     }
 
     @GetMapping("/chat")

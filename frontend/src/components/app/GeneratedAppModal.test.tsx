@@ -50,7 +50,7 @@ const mockGeneratedApp: GeneratedApp = {
   buildStatus: "SUCCESS",
   buildOutput: "vite v5.4.10 building for production...\n✓ 42 modules transformed.\ndist/index.html 0.45 kB\ndist/assets/index.js 142 kB\n✓ built in 1.25s",
   previewPort: 5174,
-  previewUrl: "http://localhost:5174",
+  previewUrl: "/api/startups/2/app/preview/",
   createdAt: "2026-10-19T11:00:00Z",
   updatedAt: "2026-10-19T11:05:00Z",
 };
@@ -179,11 +179,11 @@ describe("GeneratedAppModal Component", () => {
     });
 
     const html = container.innerHTML;
-    expect(html).toContain("http://localhost:5174");
+    expect(html).toContain("/api/startups/2/app/preview/");
     expect(html).toContain("Open in New Tab");
     const iframe = container.querySelector('iframe');
     expect(iframe).not.toBeNull();
-    expect(iframe?.getAttribute("src")).toBe("http://localhost:5174");
+    expect(iframe?.getAttribute("src")).toBe("/api/startups/2/app/preview/");
   });
 
   it("invokes generateApp when clicking Re-generate App", () => {

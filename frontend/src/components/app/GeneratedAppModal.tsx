@@ -464,7 +464,15 @@ export default function GeneratedAppModal({ onClose }: { onClose: () => void }) 
             {/* Tab 3: Live Preview */}
             {activeTab === "preview" && (
               <div className="flex-1 flex flex-col min-h-0 bg-slate-950">
-                {isPreviewActive && generatedApp?.previewUrl ? (
+                {actionLoading === "preview" ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
+                    <div className="h-10 w-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                    <h3 className="text-base font-bold text-white">Starting Live Preview…</h3>
+                    <p className="text-xs text-slate-400 max-w-md">
+                      Compiling production assets and launching the isolated preview server.
+                    </p>
+                  </div>
+                ) : isPreviewActive && generatedApp?.previewUrl ? (
                   <div className="flex-1 flex flex-col min-h-0">
                     <div className="px-4 py-2 bg-slate-900/60 border-b border-slate-800/60 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">

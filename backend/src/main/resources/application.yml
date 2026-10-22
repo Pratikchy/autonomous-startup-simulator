@@ -33,6 +33,8 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
   workspace:
     root-dir: ${APP_WORKSPACE_ROOT:./workspaces}
+  preview:
+    base-url: ${APP_PREVIEW_BASE_URL:}
   simulation:
     # Base tick interval (ms) for the mock simulation engine at 1x speed
     tick-interval-ms: 900
