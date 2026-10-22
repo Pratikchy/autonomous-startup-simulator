@@ -17,9 +17,14 @@ import type {
   CoworkerChatMessage,
 } from "../types";
 
-// In dev, Vite proxies /api to the backend (see vite.config.ts), so a relative
-// base works both in dev and when the SPA is served behind the same origin.
-const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "/api";
+// All browser-side API requests and SSE streams use the same-origin relative
+// "/api" path in both production and development:
+//  - In production (Vercel): frontend/vercel.json rewrites /api/* to the Render
+//    backend, preventing CORS errors on preview and production origins.
+//  - In development (Vite): vite.config.ts proxies /api to http://127.0.0.1:8080.
+// We deliberately use a fixed relative "/api" base so that environment variables
+// (such as VITE_API_BASE_URL on Vercel) cannot bypass the proxy and trigger CORS failures.
+export const BASE = "/api";
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
