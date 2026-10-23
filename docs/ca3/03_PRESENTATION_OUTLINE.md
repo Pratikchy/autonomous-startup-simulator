@@ -26,6 +26,17 @@ Use this outline to introduce the Autonomous Virtual Startup Simulator in a shor
 
 Introduce the project as an interactive simulation of early-stage startup planning and execution. Explain that four departmental agents contribute distinct perspectives, while the application records decisions and presents activity through a web interface.
 
+## Agent role notes
+
+| Agent | Presentation focus |
+|---|---|
+| CEO | Sets strategic direction and synthesizes the department recommendations. |
+| Development | Assesses technical feasibility and proposes product and implementation work. |
+| Marketing | Develops customer, positioning, and go-to-market recommendations. |
+| Finance | Reviews budget, burn rate, runway, and pricing assumptions. |
+
+Emphasize that these are separate responsibilities within one simulation, not four independent products.
+
 ## Demo preparation
 
 - Verify the frontend and backend start successfully in the environment being used.
