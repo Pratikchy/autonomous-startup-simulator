@@ -68,6 +68,15 @@ Use a short, fictional idea that is easy to understand, such as: “A booking an
 
 Treat the generated analysis as simulation output, not validated business or financial advice.
 
+## Choosing a demonstration mode
+
+| Mode | Use when | Presenter note |
+|---|---|---|
+| `SCRIPTED_DEMO` | The presentation must run deterministically without external LLM calls. | Explain that the scripted path is intended for repeatable demonstrations. |
+| `REAL` | The required LLM provider is configured and reachable. | Explain that results depend on the configured provider; do not promise a successful response if the provider is unavailable. |
+
+Do not present the modes as interchangeable: one is deterministic, while the other depends on an external model service.
+
 ## Demo preparation
 
 - Verify the frontend and backend start successfully in the environment being used.
