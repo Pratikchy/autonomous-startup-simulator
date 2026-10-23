@@ -77,6 +77,16 @@ Treat the generated analysis as simulation output, not validated business or fin
 
 Do not present the modes as interchangeable: one is deterministic, while the other depends on an external model service.
 
+## Demo walkthrough
+
+1. Introduce the fictional startup idea before submitting it.
+2. Show the department analyses and explain one concrete difference in their recommendations.
+3. If visible in the running build, point out addressed communication and the debate stages.
+4. Show the resulting blueprint, then the execution view if it is available in that environment.
+5. Close by connecting the displayed progress or metrics to the execution simulation.
+
+Skip any step that the current build or prepared data cannot demonstrate reliably.
+
 ## Demo preparation
 
 - Verify the frontend and backend start successfully in the environment being used.
