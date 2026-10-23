@@ -22,6 +22,10 @@ Use this outline to introduce the Autonomous Virtual Startup Simulator in a shor
 | 8 | Lessons and next steps | Summarize what the project demonstrates, identify limitations observed during testing, and describe planned work without presenting incomplete phases as finished. |
 | 9 | Questions | Invite questions and point to the [project overview](./01_PROJECT_OVERVIEW.md) and repository README for additional detail. |
 
+## Opening talk track
+
+Introduce the project as an interactive simulation of early-stage startup planning and execution. Explain that four departmental agents contribute distinct perspectives, while the application records decisions and presents activity through a web interface.
+
 ## Demo preparation
 
 - Verify the frontend and backend start successfully in the environment being used.
