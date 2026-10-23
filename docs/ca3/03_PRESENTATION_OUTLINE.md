@@ -2,6 +2,12 @@
 
 Use this outline to introduce the Autonomous Virtual Startup Simulator in a short project presentation. Adjust the timing and demo to fit the audience and available setup.
 
+## Audience and timing
+
+- **Audience:** classmates, assessors, or technical reviewers who need a concise product and architecture overview.
+- **Suggested duration:** 8–10 minutes, including a short demonstration and questions.
+- **Main takeaway:** the project combines specialized agent reasoning with a persistent, observable startup simulation; present only behavior verified in the demo environment.
+
 ## Suggested flow
 
 | Slide | Topic | Talking points |
