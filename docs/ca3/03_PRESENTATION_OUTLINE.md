@@ -54,6 +54,14 @@ flowchart LR
 
 Explain that the diagram is a presentation-level summary; use the architecture document for implementation detail.
 
+## Architecture speaking notes
+
+- The React and TypeScript frontend presents the simulation and its live state.
+- The Spring Boot backend coordinates application workflows and exposes REST endpoints and Server-Sent Events (SSE).
+- Relational persistence keeps startup and simulation data on the server rather than relying only on the browser session.
+
+For component names and detailed boundaries, refer to [the system architecture](./02_SYSTEM_ARCHITECTURE.md).
+
 ## Demo preparation
 
 - Verify the frontend and backend start successfully in the environment being used.
