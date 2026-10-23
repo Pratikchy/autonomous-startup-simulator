@@ -94,3 +94,7 @@ Skip any step that the current build or prepared data cannot demonstrate reliabl
 - If showing `REAL` mode, verify the provider configuration beforehand and do not display or commit credentials.
 - Keep a prepared example startup idea available in case live entry takes too long.
 - Avoid claiming a feature works unless it has been verified in the demo environment.
+
+## Fallback plan
+
+If the live application is unavailable, use previously captured screenshots or a short recording only if they are current and accurately labeled. State that the material is prerecorded, explain which parts could not be verified live, and continue with the architecture and workflow slides rather than implying the demo succeeded.
