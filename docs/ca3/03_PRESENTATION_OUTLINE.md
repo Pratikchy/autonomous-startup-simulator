@@ -104,3 +104,10 @@ If the live application is unavailable, use previously captured screenshots or a
 - Startup plans and financial metrics are generated from simulation inputs and assumptions; they are not professional business or financial advice.
 - `REAL` mode depends on the configured LLM provider and should be described with that dependency in mind.
 - Distinguish implemented and demonstrated behavior from future work or unverified outcomes.
+
+## Questions to invite
+
+- How do the four agent roles influence one another's recommendations?
+- What information persists when the browser is refreshed or closed?
+- Which parts of the demonstration are deterministic, and which depend on an external LLM provider?
+- What would need validation before using the generated plan for a real startup decision?
