@@ -98,3 +98,9 @@ Skip any step that the current build or prepared data cannot demonstrate reliabl
 ## Fallback plan
 
 If the live application is unavailable, use previously captured screenshots or a short recording only if they are current and accurately labeled. State that the material is prerecorded, explain which parts could not be verified live, and continue with the architecture and workflow slides rather than implying the demo succeeded.
+
+## Limitations to communicate
+
+- Startup plans and financial metrics are generated from simulation inputs and assumptions; they are not professional business or financial advice.
+- `REAL` mode depends on the configured LLM provider and should be described with that dependency in mind.
+- Distinguish implemented and demonstrated behavior from future work or unverified outcomes.
