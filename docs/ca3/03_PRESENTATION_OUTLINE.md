@@ -37,6 +37,23 @@ Introduce the project as an interactive simulation of early-stage startup planni
 
 Emphasize that these are separate responsibilities within one simulation, not four independent products.
 
+## Simulation flow
+
+Use this compact flow on the slide that connects planning to execution:
+
+```mermaid
+flowchart LR
+    Idea[Founder idea] --> Agents[Department agents]
+    Agents --> Messages[Addressed messages and shared context]
+    Messages --> Debate[Position, Challenge, Convergence]
+    Debate --> Synthesis[CEO synthesis]
+    Synthesis --> Blueprint[Startup blueprint]
+    Blueprint --> Execution[90-day execution simulation]
+    Execution --> Review[Progress and health review]
+```
+
+Explain that the diagram is a presentation-level summary; use the architecture document for implementation detail.
+
 ## Demo preparation
 
 - Verify the frontend and backend start successfully in the environment being used.
