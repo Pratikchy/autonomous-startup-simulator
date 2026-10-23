@@ -62,6 +62,12 @@ Explain that the diagram is a presentation-level summary; use the architecture d
 
 For component names and detailed boundaries, refer to [the system architecture](./02_SYSTEM_ARCHITECTURE.md).
 
+## Example demo scenario
+
+Use a short, fictional idea that is easy to understand, such as: “A booking and reminder service for independent music teachers.” Enter only non-sensitive sample information, then use the same idea throughout the walkthrough so the audience can compare the agents' perspectives.
+
+Treat the generated analysis as simulation output, not validated business or financial advice.
+
 ## Demo preparation
 
 - Verify the frontend and backend start successfully in the environment being used.
